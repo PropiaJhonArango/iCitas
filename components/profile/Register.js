@@ -1,10 +1,10 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-export default function Login() {
+export default function Register() {
     return (
         <View>
-            <Text>Formulario de Logueo Jhon</Text>
+            <Text>Formulario de Registro</Text>
         </View>
     )
 }

@@ -32,30 +32,32 @@ export default function UserGuest() {
             <Divider 
                 style={styles.divider}
             />
+
             <View style={styles.container}>
-                <View style={styles.buttonsContainer}>
-                     <Button
-                        title ="Iniciar Sesión"
-                        onPress={()=> navigation.navigate("login")}
-                    />
-                </View>
-                <View style={styles.buttonsContainer}>
-                     <Button
-                        title ="Registrate"
-                        onPress={()=> console.log("Click en Registrarse")}
-                    />
-                </View>
+    
+                <Button 
+                    title="Iniciar Sesión"
+                    containerStyle ={styles.btnContainer}
+                    buttonStyle = {styles.btnLogin}
+                    onPress={()=> navigation.navigate("login")}
+                 />
                 
-            
+                <Text 
+                    style={styles.register}
+                    onPress={() => navigation.navigate("register")}
+                >
+                    ¿Aun no tienes una cuenta?{" "}
+                    <Text style={styles.btnRegister}>
+                        Régistrate!
+                    </Text>
+                </Text>
+
             </View> 
-
-
-
-            
-
+          
        </ScrollView>
     )
 }
+
 
 const styles = StyleSheet.create({
     mainViewScroll:{
@@ -94,14 +96,27 @@ const styles = StyleSheet.create({
 
     container: {
         flex: 1,
-        flexDirection: 'row',
+        // flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 20
-      },
-      buttonsContainer: {
-        flex: 1,
-        margin: 10
-      }
+    },
+    btnContainer:{
+        marginTop: 20,
+        width: "95%",
+        alignSelf: "center"
+    },
+    btnLogin:{
+        backgroundColor: "#047ca4"
+    },
+    register:{
+        marginTop:15,
+        marginHorizontal:10,
+        alignSelf: "center"
+    },
+    btnRegister:{
+        color: "#047ca4",
+        fontWeight: "bold"
+    }
     
 })
