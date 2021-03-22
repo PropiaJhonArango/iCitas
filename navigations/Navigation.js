@@ -46,7 +46,7 @@ export default function Navigation() {
             <Icon 
                 type="font-awesome"
                 name={iconName}
-                size= {focused ? 32 : 22}
+                size= {focused ? 40 : 22}
                 color={color}
             />
         )
@@ -58,7 +58,14 @@ export default function Navigation() {
                  initialRouteName = "appointments"
                  tabBarOptions={{
                      inactiveTintColor:"#047ca4",
-                     activeTintColor: "#f4544c",                                                 
+                     activeTintColor: "#f4544c",
+                     style: {
+                        backgroundColor:'transparent',
+                        borderTopWidth: 0,
+                        position: 'absolute',
+                        elevation: 0  
+                      }
+                                    
                  }}
                 screenOptions ={({route}) => ({
 
