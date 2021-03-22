@@ -7,24 +7,24 @@ import UserLogged from './UserLogged'
 import UserGuest from './UserGuest'
 import Loading from '../../components/Loading'
 
-export default function Profile() {
+export default function Profile({userLogged}) {
 
-    const [login, setLogin] = useState(null)
+    // const [login, setLogin] = useState(null)
 
-    useFocusEffect(
+    // useFocusEffect(
 
-        useCallback(() =>{
-            const user = getCurrentUser()
-            user ? setLogin(true) : setLogin(false)
-        })
-    )
+    //     useCallback(() =>{
+    //         const user = getCurrentUser()
+    //         user ? setLogin(true) : setLogin(false)
+    //     })
+    // )
 
-    if(login == null){
+    if(userLogged == null){
         return <Loading  isVisible={true} text ="Cargando..." />
-   }
+    }
 
 
-   return login ? <UserLogged/> : <UserGuest/>
+   return userLogged ? <UserLogged/> : <UserGuest/>
 }
 
 const styles = StyleSheet.create({})
