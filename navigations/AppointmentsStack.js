@@ -12,7 +12,11 @@ export default function AppointmentsStack() {
            <Stack.Screen
                 name="appointments"
                 component={Appointments}
-                options={{title:"Citas Activas"}}
+                options={{
+                            title:"Citas Activas",
+                            headerTitleAlign:"center"
+                        }}
+                
            />
        </Stack.Navigator>
     )

@@ -11,7 +11,10 @@ export default function SocialStack() {
            <Stack.Screen
                 name="social"
                 component={Social}
-                options={{title:"Mi Circulo Social"}}
+                options={{
+                            title:"Mi Circulo Social",
+                            headerTitleAlign:"center"
+                        }}
            />
        </Stack.Navigator>
     )

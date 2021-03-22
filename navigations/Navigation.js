@@ -16,7 +16,7 @@ const Tab = createBottomTabNavigator()
 
 export default function Navigation() {
 
-    const screenOptions =(route, color)=>{
+    const screenOptions =(route, color,focused)=>{
         let iconName
 
         switch (route.name) {
@@ -46,7 +46,7 @@ export default function Navigation() {
             <Icon 
                 type="font-awesome"
                 name={iconName}
-                size={22}
+                size= {focused ? 32 : 22}
                 color={color}
             />
         )
@@ -58,11 +58,13 @@ export default function Navigation() {
                  initialRouteName = "appointments"
                  tabBarOptions={{
                      inactiveTintColor:"#047ca4",
-                     activeTintColor: "#f4544c",
-                                                       
+                     activeTintColor: "#f4544c",                                                 
                  }}
                 screenOptions ={({route}) => ({
-                    tabBarIcon: ({color}) => screenOptions(route,color)
+
+                    /*focused property indicates if the tab has the focus 
+                    I send this property as a parameter to screenOptions to determine the size of the tab*/
+                    tabBarIcon: ({focused,color}) => screenOptions(route,color,focused)
                 })}
             >
 

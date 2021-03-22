@@ -4,7 +4,6 @@ import { createStackNavigator } from '@react-navigation/stack'
 import HistoryAppointments from '../screens/HistoryAppointments'
 
 
-
 const Stack = createStackNavigator()
 
 export default function HistoryAppointmentsStack() {
@@ -13,7 +12,10 @@ export default function HistoryAppointmentsStack() {
            <Stack.Screen
                 name="historyAppointment"
                 component={HistoryAppointments}
-                options={{title:"Citas Antiguas"}}
+                options={{
+                            title:"Citas Antiguas",
+                            headerTitleAlign:"center"
+                        }}
            />
        </Stack.Navigator>
     )

@@ -11,7 +11,10 @@ export default function SettingsAccountStack() {
            <Stack.Screen
                 name="settingsAccount"
                 component={SettingsAccount}
-                options={{title:"Ajustes Cuenta"}}
+                options={{
+                            title:"Ajustes Cuenta",
+                            headerTitleAlign:"center"
+                        }}
            />
        </Stack.Navigator>
     )

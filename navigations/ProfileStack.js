@@ -11,7 +11,10 @@ export default function ProfileStack() {
            <Stack.Screen
                 name="profile"
                 component={Profile}
-                options={{title:"Perfil"}}
+                options={{
+                            title:"Perfil",
+                            headerTitleAlign:"center"
+                        }}
            />
        </Stack.Navigator>
     )
