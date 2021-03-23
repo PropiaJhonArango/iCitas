@@ -2,11 +2,11 @@ import React from 'react'
 import { ScrollView,Image } from 'react-native'
 import { StyleSheet, Text, View } from 'react-native'
 import { Button, Divider } from 'react-native-elements'
-import { useNavigation  }  from '@react-navigation/native'
+// import { useNavigation  }  from '@react-navigation/native'
 
-export default function UserGuest() {
+export default function UserGuest({navigation}) {
 
-    const navigation = useNavigation()
+
 
     return (
        <ScrollView

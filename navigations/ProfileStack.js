@@ -7,19 +7,21 @@ import Register from '../components/profile/Register'
 
 const Stack = createStackNavigator()
 
-export default function ProfileStack({userLogged}) {
+export default function ProfileStack() {
     return (
        <Stack.Navigator>
            <Stack.Screen
                 name="profile"
-                children ={ () => <Profile userLogged={userLogged} />}
+                // children ={ () => <Profile userLogged={userLogged} />}
+                component={Profile}
                 options={{
 
-                            title: (  userLogged ?  "Perfil" : "iCitas"),
+                            // title: (  userLogged ?  "Perfil" : "iCitas"),
+                            title:"Perfil",
                             headerTitleAlign:"center"
                         }}
            />
-           <Stack.Screen
+           {/* <Stack.Screen
                 name="login"
                component={Login}
                 options={{
@@ -34,7 +36,7 @@ export default function ProfileStack({userLogged}) {
                             title: "Registrate",
                             headerTitleAlign:"center"
                         }}
-           />
+           /> */}
        </Stack.Navigator>
     )
 }
