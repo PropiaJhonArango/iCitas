@@ -2,15 +2,14 @@ import React from 'react'
 import { createStackNavigator } from '@react-navigation/stack'
 import { StyleSheet} from 'react-native'
 
-import Profile from '../screens/profile/Profile'
+
 import Login from '../components/profile/Login'
 import Register from '../components/profile/Register'
 import UserGuest from '../screens/profile/UserGuest'
-import Navigation from './Navigation'
 
 const Root = createStackNavigator()
 
-export default function RootStack({navigation, setLogueado}) {
+export default function RootStack({setLogged}) {
 
 
     return (
@@ -19,8 +18,7 @@ export default function RootStack({navigation, setLogueado}) {
        >   
            <Root.Screen
                 name="login"
-                component={ () => <Login setLogueado={setLogueado} /> }
-                // children={()=><Login setLogueado={setLogueado}/>}
+                component={ () => <Login setLogged={setLogged} /> }
                 options={{
                             title: "Iniciar Sesión",                          
                             headerTitleAlign:"center",
@@ -31,8 +29,7 @@ export default function RootStack({navigation, setLogueado}) {
            />
            <Root.Screen
                 name="register"
-                component={ () => <Register setLogueado={setLogueado} /> }
-                // component={Register}
+                component={ () => <Register setLogged={setLogged} /> }
                 options={{
                             title: "Registrate",
                             headerTitleAlign:"center",
@@ -47,7 +44,6 @@ export default function RootStack({navigation, setLogueado}) {
                 name="userGuest"
                 component={UserGuest}
                 options={{
-                            title: "Iniciar Sesión",
                             headerShown : false
                         }}
            />

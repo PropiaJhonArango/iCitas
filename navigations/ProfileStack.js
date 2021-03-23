@@ -7,36 +7,20 @@ import Register from '../components/profile/Register'
 
 const Stack = createStackNavigator()
 
-export default function ProfileStack() {
+export default function ProfileStack({setLogged}) {
     return (
        <Stack.Navigator>
            <Stack.Screen
                 name="profile"
-                // children ={ () => <Profile userLogged={userLogged} />}
-                component={Profile}
+                //component={Profile}
+                component={ () => <Profile setLogged={setLogged} /> }
                 options={{
 
-                            // title: (  userLogged ?  "Perfil" : "iCitas"),
                             title:"Perfil",
                             headerTitleAlign:"center"
                         }}
            />
-           {/* <Stack.Screen
-                name="login"
-               component={Login}
-                options={{
-                            title: "Iniciar Sesión",
-                            headerTitleAlign:"center"
-                        }}
-           />
-           <Stack.Screen
-                name="register"
-                component={Register}
-                options={{
-                            title: "Registrate",
-                            headerTitleAlign:"center"
-                        }}
-           /> */}
+          
        </Stack.Navigator>
     )
 }

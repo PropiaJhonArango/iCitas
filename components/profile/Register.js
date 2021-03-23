@@ -9,7 +9,7 @@ import {validateEmail} from '../../utils/helpers'
 import {registerUser,loginWithEmailAndPassword} from '../../utils/actions'
 import Loading from '../Loading'
 
-export default function Register({setLogueado}) {
+export default function Register({setLogged}) {
 
     const [formData, setFormData] = useState(defaultFormValues())
     const [errorEmail, setErrorEmail] = useState("")
@@ -36,6 +36,7 @@ export default function Register({setLogueado}) {
         
         if(!resultRegister.statusResponse){
             setErrorEmail(resultRegister.error)
+            setLoading(false)
             return
         }
 
@@ -47,7 +48,8 @@ export default function Register({setLogueado}) {
             return
         }
 
-        setLogueado(true) //Para que recargue la pantalla una vez se actualice el nombre
+        /*The Logged status is changed so that the user just logged in enters the TabNavigator */
+        setLogged(true) 
         
     }
 

@@ -14,7 +14,7 @@ import ProfileStack from './ProfileStack'
 
 const Tab = createBottomTabNavigator()
 
-export default function Navigation() {
+export default function Navigation({setLogged}) {
 
     const screenOptions =(route, color,focused)=>{
         let iconName
@@ -108,7 +108,8 @@ export default function Navigation() {
                 <Tab.Screen
                     name="profile"
                     // children ={ () => <ProfileStack userLogged={userLogged} />}
-                     component ={ProfileStack}
+                    component={ () => <ProfileStack setLogged={setLogged} /> }
+                    //component ={ProfileStack}
                     options={{
                                 title: "Perfil",
                             }}

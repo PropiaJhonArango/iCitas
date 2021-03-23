@@ -43,3 +43,6 @@ export const loginWithEmailAndPassword = async(email,password) =>{
     return result
 }
 
+export const closeSession = () =>{
+    return firebase.auth().signOut()
+}
