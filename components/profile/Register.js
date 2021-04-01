@@ -21,12 +21,12 @@ export default function Register({setLogged}) {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     const onChange =(e, type) =>{
-        setFormData({...formData, [type]: e.nativeEvent.text}) /* Para que el JSON sea dinamico se envuelve en corchete, el type */
+        setFormData({...formData, [type]: e.nativeEvent.text}) 
 
     }
 
 
-    const onSubmit = async() =>{ //metodo asincrono
+    const onSubmit = async() =>{ 
 
         if(!validateData()){
             return;
@@ -271,30 +271,3 @@ const styles = StyleSheet.create({
         color:"#009bd1"
     }
 })
-
-// const styles = StyleSheet.create({
-//     image:{
-//         height: 230, 
-//         width: "100%",
-//         marginBottom: 10
-//     },
-
-//     formView:{
-//         marginTop: 20,
-//     },
-//     input:{
-//         width: "100%"
-//     },
-//     icon:{
-//         color: "#c1c1c1",
-//         marginRight: 5
-//     },
-//     btnContainer:{
-//         marginTop: 20,
-//         width: "95%",
-//         alignSelf: "center"
-//     },
-//     btnRegister:{
-//         backgroundColor: "#047ca4"
-//     },
-// })

@@ -1,6 +1,5 @@
 
 import React,{useState,useEffect} from 'react'
-
 import Navigation from './navigations/Navigation'
 import { NavigationContainer } from '@react-navigation/native'
 
@@ -11,8 +10,7 @@ import { LogBox} from 'react-native'
 LogBox.ignoreAllLogs()
 
 export default function App() {
-
-  const [logueado, setLogged] = useState(false)
+  const [logged, setLogged] = useState(false)
 
   useEffect(() => {
     const user = getCurrentUser() 
@@ -23,7 +21,7 @@ export default function App() {
   return (
     <NavigationContainer>
       {
-        logueado ? <Navigation setLogged={setLogged}/> : <RootStack setLogged ={setLogged}/>
+        logged ? <Navigation setLogged={setLogged}/> : <RootStack setLogged ={setLogged}/>
       }
       </NavigationContainer>
   )

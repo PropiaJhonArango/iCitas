@@ -1,5 +1,4 @@
-import React,{ useCallback, useEffect, useState} from 'react'
-import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
+import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Icon } from 'react-native-elements'
 
@@ -107,9 +106,7 @@ export default function Navigation({setLogged}) {
                 
                 <Tab.Screen
                     name="profile"
-                    // children ={ () => <ProfileStack userLogged={userLogged} />}
                     component={ () => <ProfileStack setLogged={setLogged} /> }
-                    //component ={ProfileStack}
                     options={{
                                 title: "Perfil",
                             }}

@@ -1,55 +1,92 @@
-import { LinearGradient } from 'expo-linear-gradient'
 import React,{useState,useEffect} from 'react'
-import { ScrollView } from 'react-native'
-import { TouchableOpacity } from 'react-native'
-import { StyleSheet, Text, View } from 'react-native'
-import { Avatar, Icon, Image } from 'react-native-elements'
-import { Button } from 'react-native-elements'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Text, View,ScrollView,Alert,StyleSheet } from 'react-native'
+import { Avatar, Icon,Image } from 'react-native-elements'
 
-import { getCurrentUser } from '../../utils/actions'
+import { getCurrentUser,uploadImage,updateProfile } from '../../utils/actions'
+import { loadImageFromGallery } from '../../utils/helpers'
+import Loading from '../../components/Loading'
+
 
 export default function UserLogged({setLogged}) {
     const [user, setUser] = useState(getCurrentUser())
     const [reloadUser, setReloadUser] = useState(false)
-    const [photoUrl, setPhotoUrl] = useState(user.photoURL)
-
-
+    const [loading, setLoading] = useState(false)
+    const [loadingText, setLoadingText] = useState("")
 
     useEffect(() => {
         setUser(getCurrentUser())
         setReloadUser(false)
-        console.log(user)
     }, [reloadUser])
 
 
     return (
-        <ScrollView>
-            <Header user={user}/>
-            <Appointments user={user}/>
-            <PersonalInfo user={user}/>
-            
+        <View>
+            {
+                user &&(
+                    <View>
+                        <Header user={user} setLoading={setLoading} setLoadingText={setLoadingText} setReloadUser={setReloadUser}/>
+                        <AppointmentsStats user={user}/>
+                        <PersonalInfo user={user}/>
+                        <Loading isVisible={loading} text={loadingText} />
+                    </View>
 
-        </ScrollView>
+                )
+            }
+            
+        </View>
     )
 }
 
-function Header({user}){
+function Header({user,setLoading, setLoadingText}){
+    const [photoUrl, setPhotoUrl] = useState(user.photoURL) 
+
+    const updateProfilePhoto = async() =>{
+
+        const resultImageSelected = await loadImageFromGallery([1,1])
+
+        if(!resultImageSelected.status){
+            return
+        }
+ 
+        setLoadingText("Actualizando foto de perfil.")
+        setLoading(true)
+        const resultUploadImage = await uploadImage(resultImageSelected.image,"avatars",user.uid)
+
+
+        if(!resultUploadImage.statusResponse){
+            setLoading(false)
+            Alert.alert("Ha ocurrido un error al almacenar la foto de perfil.")
+            return
+        }
+
+        const resultUpdateProfile = await updateProfile({photoURL: resultUploadImage.url})
+
+        setLoading(false)
+        if(resultUpdateProfile.statusResponse){
+            setPhotoUrl(resultUploadImage.url)
+            
+        }else{
+            Alert.alert("Ha ocurrido un error al actualizar la foto de perfil.")
+        }
+    }
 
     return(
     <LinearGradient
-            colors={["#79ceed","#047ca4"]}
+            colors={["#047ca4","#047ca4"]}
             start={[0,0]}
             end={[1,1]}
         >
 
             <View style={styles.containerHeader}>
                 <View>
-                    {/* <InfoUser user={user}/> */}
+
                     <View style={styles.rowBeetween}>
                         <Icon 
                             type="font-awesome"
                             name="ellipsis-v"
                             iconStyle={styles.iconPoints}
+                            
                         />
  
                     </View>
@@ -59,14 +96,19 @@ function Header({user}){
                                 <Icon 
                                     type="font-awesome"
                                     name="camera"
+                                    onPress={updateProfilePhoto}
                                 />
                             </View>
                             <Image 
                                 source={
-                                    require("../../assets/avatar-default.jpg")
+                                    photoUrl
+                                    ? {uri: photoUrl}
+                                    : require("../../assets/avatar-default.jpg")
                                 }
-                                style={{width: 120,height: 120,borderRadius:50}}
+                                style={styles.profilePhoto}
+                                onPress={updateProfilePhoto}
                             />
+                           
                         </View>
                     </View>
                     <View style={styles.viewTitle}>
@@ -89,7 +131,7 @@ function PersonalInfo({user}){
             <View style={styles.viewPersonalInfoContainer}>
                 <View style={styles.viewPersonalInfo}>
                     
-                    <Icon 
+                    <Icon
                         type="font-awesome"
                         name="user-circle"
                         iconStyle={styles.iconPersonalInfo}
@@ -158,7 +200,7 @@ function PersonalInfo({user}){
     )
 }
 
-function Appointments({user}){
+function AppointmentsStats({user}){
     return(
         <View style={styles.viewPersonalStats} >
             <View style={[styles.viewStatAppointment,styles.divider]}>
@@ -302,6 +344,11 @@ const styles = StyleSheet.create({
     divider:{
        borderRightWidth:1,
        borderColor: "#FFFFFF"
+    },
+    profilePhoto:{
+        width: 120,
+        height: 120,
+        borderRadius:50
     }
     
 
