@@ -132,9 +132,8 @@ export default function Login({setLogged}) {
                         <Text style={[styles.textSingIn,{
                             color: "#FFFFFF"
                         }]}>Iniciar Sesión</Text>
-
-                    
-                    </TouchableOpacity> 
+                    </TouchableOpacity>
+                     
                     <TouchableOpacity
                     onPress={() => navigation.navigate("register")}
                         style ={styles.SingUp}

@@ -1,11 +1,15 @@
 import React,{useState,useEffect} from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Text, View,ScrollView,Alert,StyleSheet } from 'react-native'
-import { Avatar, Icon,Image } from 'react-native-elements'
+import { Icon,Image } from 'react-native-elements'
+import { map } from 'lodash'
+import { TouchableOpacity } from 'react-native'
 
 import { getCurrentUser,uploadImage,updateProfile } from '../../utils/actions'
 import { loadImageFromGallery } from '../../utils/helpers'
 import Loading from '../../components/Loading'
+import Modal from '../../components/Modal'
+import DisplayDataForm from '../../components/profile/DisplayDataForm'
 
 
 export default function UserLogged({setLogged}) {
@@ -27,7 +31,7 @@ export default function UserLogged({setLogged}) {
                     <View>
                         <Header user={user} setLoading={setLoading} setLoadingText={setLoadingText} setReloadUser={setReloadUser}/>
                         <AppointmentsStats user={user}/>
-                        <PersonalInfo user={user}/>
+                        <PersonalInfo user={user} setReloadUser={setReloadUser}/>
                         <Loading isVisible={loading} text={loadingText} />
                     </View>
 
@@ -88,7 +92,6 @@ function Header({user,setLoading, setLoadingText}){
                             iconStyle={styles.iconPoints}
                             
                         />
- 
                     </View>
                     <View style={styles.imageContainer}>
                         <View>
@@ -124,76 +127,104 @@ function Header({user,setLoading, setLoadingText}){
     )
 }
 
-function PersonalInfo({user}){
+function PersonalInfo({user,setReloadUser}){
+    const [showModalInfo, setShowModalInfo] = useState(false)
+    const [renderComponentInfo, setRenderComponentInfo] = useState(null)
+
+
+    const dataOptionsUser =()=>{
+        return[
+            {
+                iconName:"user-circle",
+                textData: user.displayName ? user.displayName : "Nombre Completo",
+                onPress: () => selectedField("displayName")
+            },
+            {
+                iconName:"id-badge",
+                textData: user.uid ? user.uid : "Documento identidad",
+                onPress: () => selectedField("numberIdentify")
+            },
+            {
+                iconName:"envelope",
+                textData: user.email ? user.email : "Correo electronico",
+                onPress: () => selectedField("email")
+            },
+            {
+                iconName:"phone",
+                textData: user.phoneNumber ? user.phoneNumber : "Numero telefonico",
+                onPress: () => selectedField("phoneNumber")
+            },
+            
+        ]
+
+    }
+
+    const selectedField =(key) =>{
+        switch (key) {
+            case "displayName":
+                setRenderComponentInfo(
+                    <DisplayDataForm 
+                        typeField={key} 
+                        valueField={user.displayName} 
+                        setReloadUser={setReloadUser} 
+                        setShowModalInfo={setShowModalInfo}
+                    />
+                )
+                break;
+            case "numberIdentify":
+                setRenderComponentInfo(
+                    <DisplayDataForm typeField={key} valueField={user.uid} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>
+                )
+                break;
+            case "email":
+                setRenderComponentInfo(
+                    <DisplayDataForm typeField={key} valueField={user.email} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>
+                )
+                break;
+            case "phoneNumber":
+                setRenderComponentInfo(
+                    <DisplayDataForm typeField={key} valueField={user.phoneNumber} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>
+                )
+                break;
+           
+        }
+        setShowModalInfo(true)
+    }
+
+    const menuData = dataOptionsUser()
+
     return(
         <View>
-            
-            <View style={styles.viewPersonalInfoContainer}>
-                <View style={styles.viewPersonalInfo}>
-                    
-                    <Icon
-                        type="font-awesome"
-                        name="user-circle"
-                        iconStyle={styles.iconPersonalInfo}
-                        size={30}
-                    />
-                </View>
-                <Text>
-                    {
-                        user.displayName ? user.displayName : "Nombre Completo"
-                    }
-                </Text>
+            {
+                map(menuData,(menu,index)=>(
+                    <TouchableOpacity
+                        key={index}
+                        onPress={menu.onPress}
+                    >
+                        <View style={styles.viewPersonalInfoContainer}>
+                            <View style={styles.viewPersonalInfo}>
+                            
+                                <Icon
+                                    type="font-awesome"
+                                    name={menu.iconName}
+                                    iconStyle={styles.iconPersonalInfo}
+                                    size={30}
+                                />
+                            </View>
+                            <Text>
+                                {menu.textData}
+                            </Text>
+                        </View>
 
-            </View>
-            <View style={styles.viewPersonalInfoContainer}>
-                <View style={styles.viewPersonalInfo}>
-                    
-                    <Icon 
-                        type="font-awesome"
-                        name="id-badge"
-                        iconStyle={styles.iconPersonalInfo}
-                        size={30}
-                    />
-                </View>
-                <Text>
-                    {
-                        user.displayName ? user.displayName : "Documento identidad"
-                    }
-                </Text>
+                    </TouchableOpacity>
+                ))
+            }
+            <Modal isVisible ={showModalInfo} setVisible ={setShowModalInfo}>   
+                 {
+                     renderComponentInfo
+                 }
 
-            </View>
-            <View style={styles.viewPersonalInfoContainer}>
-                <View style={styles.viewPersonalInfo}>
-                    
-                    <Icon 
-                        type="font-awesome"
-                        name="envelope"
-                        iconStyle={styles.iconPersonalInfo}
-                        size={30}
-                    />
-                </View>
-                <Text>
-                    {
-                        user.email ? user.email : "Anonimo"
-                    }
-                </Text>
-            </View>
-            <View style={styles.viewPersonalInfoContainer}>
-                <View style={styles.viewPersonalInfo}>
-                    
-                    <Icon 
-                        type="font-awesome"
-                        name="phone"
-                        iconStyle={styles.iconPersonalInfo}
-                        size={30}
-                    />
-                </View>
-                <Text>
-                    {
-                        user.phoneNumber ? user.phoneNumber : "Numero telefonico"
-                    }
-                </Text>
-            </View>
+            </Modal>
 
         </View>
         
@@ -241,7 +272,6 @@ const styles = StyleSheet.create({
         color: "white"
     },
     rowBeetween:{
-  
         flexDirection:"row",
         justifyContent: "flex-end"
     },

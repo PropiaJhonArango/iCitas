@@ -2,6 +2,12 @@ import {firebaseApp} from './firebase'
 import * as firebase from 'firebase'
 import 'firebase/firestore'
 import { fileToBlob } from './helpers'
+import { LogBox} from 'react-native'
+
+LogBox.ignoreAllLogs()
+LogBox.ignoreLogs(["Setting a timer"])
+
+
 
 const db = firebase.firestore(firebaseApp)
 
@@ -63,8 +69,8 @@ export const uploadImage = async(image,path,name) =>{
     }
 
     return result
+    
 }
-
 export const updateProfile = async(data) =>{
     const result = { statusResponse: true, error: null}
     try {

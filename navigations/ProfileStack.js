@@ -9,14 +9,17 @@ export default function ProfileStack({setLogged}) {
 
     return (
        <Stack.Navigator>
-           <Stack.Screen
+
+
+            <Stack.Screen 
                 name="profile"
-                component={ () => <Profile setLogged={setLogged} /> }
                 options={{
-                           headerShown:false
-                        }}
-           />
-          
+                    headerShown:false
+                 }}
+            >
+                    {props => <Profile {...props} setLogged={setLogged} />}
+            </Stack.Screen>
+            
        </Stack.Navigator>
     )
 }

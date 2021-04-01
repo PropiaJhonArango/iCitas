@@ -15,24 +15,31 @@ export default function RootStack({setLogged,navigation}) {
     return (
         <Root.Navigator
             initialRouteName="userGuest"
-        >   
-           <Root.Screen
+        >
+
+            <Root.Screen
                 name="login"
-                component={ () => <Login setLogged={setLogged}  /> }
                 options={{
                     headerShown : false
                         }}
-           />
-           <Root.Screen
+            >
+                    {props => <Login {...props} setLogged={setLogged} />}
+
+            </Root.Screen>
+
+            <Root.Screen
                 name="register"
-                component={ () => <Register setLogged={setLogged}/> }
                 options={{
                     headerShown : false
-                           
                         }}
-           />
-           <Root.Screen
-                
+            >
+                    {props => <Register {...props} setLogged={setLogged} />}
+
+            </Root.Screen>
+
+
+           <Root.Screen 
+
                 name="userGuest"
                 component={UserGuest}
                 options={{

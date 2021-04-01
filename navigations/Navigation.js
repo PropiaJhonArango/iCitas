@@ -10,7 +10,6 @@ import AppointmentsStack from './AppointmentsStack'
 import ProfileStack from './ProfileStack'
 
 
-
 const Tab = createBottomTabNavigator()
 
 export default function Navigation({setLogged}) {
@@ -101,16 +100,12 @@ export default function Navigation({setLogged}) {
                 <Tab.Screen
                     name="social"
                     component ={SocialStack}
-                    options={{title: "Social"}}
+                    options={{title: "Social"}} 
                 />
-                
-                <Tab.Screen
-                    name="profile"
-                    component={ () => <ProfileStack setLogged={setLogged} /> }
-                    options={{
-                                title: "Perfil",
-                            }}
-                />
+ 
+                <Tab.Screen name="profile">
+                    {props => <ProfileStack {...props} setLogged={setLogged} />}
+                </Tab.Screen>
 
             </Tab.Navigator>
         

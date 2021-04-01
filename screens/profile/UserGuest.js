@@ -26,7 +26,7 @@ export default function UserGuest({navigation}) {
                 style={styles.footer}
                 animation="fadeInUpBig"
             >
-                <Text style={styles.title}>Bienvenido s <Text style={styles.textName}>iCitas</Text>  </Text>
+                <Text style={styles.title}>Bienvenido a <Text style={styles.textName}>iCitas</Text>  </Text>
 
                 <Text style={styles.description} >
                 Administra tus citas y las de tus allegados de una manera simple.
