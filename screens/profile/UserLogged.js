@@ -4,12 +4,14 @@ import { Text, View,ScrollView,Alert,StyleSheet } from 'react-native'
 import { Icon,Image } from 'react-native-elements'
 import { map } from 'lodash'
 import { TouchableOpacity } from 'react-native'
+import OptionesMenu from "react-native-option-menu"
 
-import { getCurrentUser,uploadImage,updateProfile } from '../../utils/actions'
+import { getCurrentUser,uploadImage,updateProfile, closeSession } from '../../utils/actions'
 import { loadImageFromGallery } from '../../utils/helpers'
 import Loading from '../../components/Loading'
 import Modal from '../../components/Modal'
 import DisplayDataForm from '../../components/profile/DisplayDataForm'
+
 
 
 export default function UserLogged({setLogged}) {
@@ -29,7 +31,11 @@ export default function UserLogged({setLogged}) {
             {
                 user &&(
                     <View>
-                        <Header user={user} setLoading={setLoading} setLoadingText={setLoadingText} setReloadUser={setReloadUser}/>
+                        <Header user={user} 
+                            setLoading={setLoading} 
+                            setLoadingText={setLoadingText} 
+                            setReloadUser={setReloadUser} 
+                            setLogged={setLogged}/>
                         <AppointmentsStats user={user}/>
                         <PersonalInfo user={user} setReloadUser={setReloadUser}/>
                         <Loading isVisible={loading} text={loadingText} />
@@ -42,7 +48,16 @@ export default function UserLogged({setLogged}) {
     )
 }
 
-function Header({user,setLoading, setLoadingText}){
+function Header({user,setLoading, setLoadingText,setLogged}){
+
+
+    const myIcon = (<Icon type="font-awesome" name="user" size={30} color="#900" />)
+
+    const CloseSessionUser =() =>{
+        closeSession()
+        setLogged(false)
+    }
+
     const [photoUrl, setPhotoUrl] = useState(user.photoURL) 
 
     const updateProfilePhoto = async() =>{
@@ -84,13 +99,19 @@ function Header({user,setLoading, setLoadingText}){
 
             <View style={styles.containerHeader}>
                 <View>
-
+                   
                     <View style={styles.rowBeetween}>
-                        <Icon 
-                            type="font-awesome"
-                            name="ellipsis-v"
-                            iconStyle={styles.iconPoints}
-                            
+                        <OptionesMenu 
+                            customButton ={
+                                <Icon 
+                                    type="font-awesome"
+                                    name="bars"
+                                    iconStyle={styles.iconPoints}     
+                                                          
+                                />
+                            }
+                            options={["Cerrar Sesión", "Cancelar"]}
+                            actions={[CloseSessionUser]}                        
                         />
                     </View>
                     <View style={styles.imageContainer}>

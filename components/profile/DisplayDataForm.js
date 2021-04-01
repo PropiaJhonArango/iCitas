@@ -50,7 +50,7 @@ export default function DisplayNameForm({typeField,valueField,setReloadUser,setS
 }
 
 function UpdateName({valueField,setReloadUser,setShowModalInfo}){
-    const [newName, setNewName] = useState(null)
+    const [newName, setNewName] = useState(valueField)
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
 
@@ -59,7 +59,7 @@ function UpdateName({valueField,setReloadUser,setShowModalInfo}){
         if(!validateForm()){
             return
         }
-        
+
         setLoading(true)     
         const result = await updateProfile({displayName: newName})    
         setLoading(false)

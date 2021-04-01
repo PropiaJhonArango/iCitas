@@ -17,7 +17,7 @@ export default function App() {
   useEffect(() => {
     const user = getCurrentUser() 
     user ? setLogged(true)  : setLogged(false)
-  }, [])
+  }, [logged])
 
 
   return (
