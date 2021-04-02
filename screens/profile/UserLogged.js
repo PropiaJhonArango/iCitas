@@ -1,10 +1,11 @@
-import React,{useState,useEffect} from 'react'
+import React,{useState,useEffect,useRef} from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Text, View,ScrollView,Alert,StyleSheet } from 'react-native'
 import { Icon,Image } from 'react-native-elements'
 import { map } from 'lodash'
 import { TouchableOpacity } from 'react-native'
 import OptionesMenu from "react-native-option-menu"
+import Toast from 'react-native-easy-toast' 
 
 import { getCurrentUser,uploadImage,updateProfile, closeSession } from '../../utils/actions'
 import { loadImageFromGallery } from '../../utils/helpers'
@@ -19,6 +20,7 @@ export default function UserLogged({setLogged}) {
     const [reloadUser, setReloadUser] = useState(false)
     const [loading, setLoading] = useState(false)
     const [loadingText, setLoadingText] = useState("")
+    const toasRef = useRef()
 
     useEffect(() => {
         setUser(getCurrentUser())
@@ -27,32 +29,32 @@ export default function UserLogged({setLogged}) {
 
 
     return (
-        <View>
+        <ScrollView>
             {
                 user &&(
                     <View>
+                        
                         <Header user={user} 
                             setLoading={setLoading} 
                             setLoadingText={setLoadingText} 
                             setReloadUser={setReloadUser} 
-                            setLogged={setLogged}/>
+                            setLogged={setLogged}
+                            
+                        />
                         <AppointmentsStats user={user}/>
-                        <PersonalInfo user={user} setReloadUser={setReloadUser}/>
+                        <PersonalInfo user={user} setReloadUser={setReloadUser} toasRef={toasRef}/>
                         <Loading isVisible={loading} text={loadingText} />
+                        <Toast ref={toasRef} position="bottom" opacity={0.7}/>
                     </View>
 
                 )
             }
             
-        </View>
+        </ScrollView>
     )
 }
 
 function Header({user,setLoading, setLoadingText,setLogged}){
-
-
-    const myIcon = (<Icon type="font-awesome" name="user" size={30} color="#900" />)
-
     const CloseSessionUser =() =>{
         closeSession()
         setLogged(false)
@@ -148,7 +150,7 @@ function Header({user,setLoading, setLoadingText,setLogged}){
     )
 }
 
-function PersonalInfo({user,setReloadUser}){
+function PersonalInfo({user,setReloadUser,toasRef}){
     const [showModalInfo, setShowModalInfo] = useState(false)
     const [renderComponentInfo, setRenderComponentInfo] = useState(null)
 
@@ -162,7 +164,7 @@ function PersonalInfo({user,setReloadUser}){
             },
             {
                 iconName:"id-badge",
-                textData: user.uid ? user.uid : "Documento identidad",
+                textData: "Documento identidad",
                 onPress: () => selectedField("numberIdentify")
             },
             {
@@ -174,6 +176,11 @@ function PersonalInfo({user,setReloadUser}){
                 iconName:"phone",
                 textData: user.phoneNumber ? user.phoneNumber : "Numero telefonico",
                 onPress: () => selectedField("phoneNumber")
+            },
+            {
+                iconName:"lock",
+                textData:  "Contraseña",
+                onPress: () => selectedField("password")
             },
             
         ]
@@ -194,17 +201,46 @@ function PersonalInfo({user,setReloadUser}){
                 break;
             case "numberIdentify":
                 setRenderComponentInfo(
-                    <DisplayDataForm typeField={key} valueField={user.uid} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>
+                    <DisplayDataForm 
+                        typeField={key} 
+                        valueField={user.uid} 
+                        setReloadUser={setReloadUser} 
+                        setShowModalInfo={setShowModalInfo} 
+                        toasRef={toasRef}
+                    />
                 )
                 break;
             case "email":
                 setRenderComponentInfo(
-                    <DisplayDataForm typeField={key} valueField={user.email} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>
+                    <DisplayDataForm 
+                        typeField={key} 
+                        valueField={user.email} 
+                        setReloadUser={setReloadUser} 
+                        setShowModalInfo={setShowModalInfo} 
+                        toasRef={toasRef}
+                    />
                 )
                 break;
             case "phoneNumber":
                 setRenderComponentInfo(
-                    <DisplayDataForm typeField={key} valueField={user.phoneNumber} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>
+                    <DisplayDataForm 
+                        typeField={key} 
+                        valueField={user.phoneNumber} 
+                        setReloadUser={setReloadUser} 
+                        setShowModalInfo={setShowModalInfo} 
+                        toasRef={toasRef}
+                    />
+                )
+                break;
+            case "password":
+                setRenderComponentInfo(
+                    <DisplayDataForm 
+                        typeField={key} 
+                        valueField={""} 
+                        setReloadUser={setReloadUser} 
+                        setShowModalInfo={setShowModalInfo} 
+                        toasRef={toasRef}
+                    />
                 )
                 break;
            
@@ -340,7 +376,7 @@ const styles = StyleSheet.create({
     viewPersonalInfoContainer:{
         flexDirection:"row",
         alignItems: "center",
-        marginTop:25,
+        marginTop:15,
         backgroundColor: "#e3e6e6",
         paddingHorizontal:16,
         paddingVertical: 8,
@@ -397,8 +433,8 @@ const styles = StyleSheet.create({
        borderColor: "#FFFFFF"
     },
     profilePhoto:{
-        width: 120,
-        height: 120,
+        width: 130,
+        height: 130,
         borderRadius:50
     }
     

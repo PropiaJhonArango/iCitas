@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "icitas",
-    "slug": "icitas",
+    "name": "iCitas",
+    "slug": "iCitas",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Logo-Corazon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/SplashPrueba.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#047ca4"
+
     },
     "updates": {
       "fallbackToCacheTimeout": 0
