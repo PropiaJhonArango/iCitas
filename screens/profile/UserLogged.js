@@ -1,4 +1,4 @@
-import React,{useState,useEffect,useRef} from 'react'
+import React,{useState,useEffect,useRef, useCallback} from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Text, View,ScrollView,Alert,StyleSheet } from 'react-native'
 import { Icon,Image } from 'react-native-elements'
@@ -6,8 +6,9 @@ import { map } from 'lodash'
 import { TouchableOpacity } from 'react-native'
 import OptionesMenu from "react-native-option-menu"
 import Toast from 'react-native-easy-toast' 
+import { useFocusEffect } from '@react-navigation/native'
 
-import { getCurrentUser,uploadImage,updateProfile, closeSession } from '../../utils/actions'
+import { getCurrentUser,uploadImage,updateProfile, closeSession, updateDocument, getCollectionWithId } from '../../utils/actions'
 import { loadImageFromGallery } from '../../utils/helpers'
 import Loading from '../../components/Loading'
 import Modal from '../../components/Modal'
@@ -16,36 +17,50 @@ import DisplayDataForm from '../../components/profile/DisplayDataForm'
 
 
 export default function UserLogged({setLogged}) {
-    const [user, setUser] = useState(getCurrentUser())
+    const [user, setUser] = useState()
     const [reloadUser, setReloadUser] = useState(false)
     const [loading, setLoading] = useState(false)
     const [loadingText, setLoadingText] = useState("")
     const toasRef = useRef()
 
+
+
     useEffect(() => {
+
         setUser(getCurrentUser())
         setReloadUser(false)
+        
+        
     }, [reloadUser])
-
 
     return (
         <ScrollView>
             {
                 user &&(
-                    <View>
+                    <ScrollView>
                         
-                        <Header user={user} 
+                        <Header 
+                            user={user} 
                             setLoading={setLoading} 
                             setLoadingText={setLoadingText} 
-                            setReloadUser={setReloadUser} 
                             setLogged={setLogged}
                             
                         />
-                        <AppointmentsStats user={user}/>
-                        <PersonalInfo user={user} setReloadUser={setReloadUser} toasRef={toasRef}/>
+                        <AppointmentsStats 
+                            user={user}
+                        />
+
+                        <PersonalInfo 
+                            user={user} 
+                            setUser={setUser}
+                            setReloadUser={setReloadUser} 
+                            toasRef={toasRef}
+                        />
+
                         <Loading isVisible={loading} text={loadingText} />
+                        
                         <Toast ref={toasRef} position="bottom" opacity={0.7}/>
-                    </View>
+                    </ScrollView>
 
                 )
             }
@@ -54,7 +69,7 @@ export default function UserLogged({setLogged}) {
     )
 }
 
-function Header({user,setLoading, setLoadingText,setLogged}){
+function Header({user,setLoading, setLoadingText,setReloadUser,setLogged}){
     const CloseSessionUser =() =>{
         closeSession()
         setLogged(false)
@@ -83,6 +98,7 @@ function Header({user,setLoading, setLoadingText,setLogged}){
 
         const resultUpdateProfile = await updateProfile({photoURL: resultUploadImage.url})
 
+        const resultUpdateDocument = await updateDocument("Users",user.uid,{photoURL: resultUploadImage.url})
         setLoading(false)
         if(resultUpdateProfile.statusResponse){
             setPhotoUrl(resultUploadImage.url)
@@ -90,6 +106,7 @@ function Header({user,setLoading, setLoadingText,setLogged}){
         }else{
             Alert.alert("Ha ocurrido un error al actualizar la foto de perfil.")
         }
+        
     }
 
     return(
@@ -150,9 +167,41 @@ function Header({user,setLoading, setLoadingText,setLogged}){
     )
 }
 
-function PersonalInfo({user,setReloadUser,toasRef}){
+function PersonalInfo({user,setUser,setReloadUser,toasRef}){
+
     const [showModalInfo, setShowModalInfo] = useState(false)
     const [renderComponentInfo, setRenderComponentInfo] = useState(null)
+    const [infoUser, setInfoUser] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [reloadInfoExternal, setReloadInfoExternal] = useState(false)
+    
+
+      useFocusEffect(
+
+        useCallback(() => {
+
+            (async ()=> {
+                setLoading(true)
+                const result = await getCollectionWithId("Users",user.uid)
+                setUser({
+                    ...user,
+                    numberIdentify: result.data.numberIdentify ,
+                    phoneNumberUser: result.data.phoneNumber ,
+                    callingCode: result.data.callingCode 
+                })
+                setInfoUser({
+                    numberIdentify: result.data.numberIdentify ,
+                    phoneNumberUser: result.data.phoneNumber ,
+                    callingCode: result.data.callingCode 
+
+                })
+                setReloadInfoExternal(false)
+                setLoading(false)
+            })()
+        }, [reloadInfoExternal])
+
+    )
+
 
 
     const dataOptionsUser =()=>{
@@ -164,7 +213,7 @@ function PersonalInfo({user,setReloadUser,toasRef}){
             },
             {
                 iconName:"id-badge",
-                textData: "Documento identidad",
+                textData: user.numberIdentify ? user.numberIdentify :  infoUser.numberIdentify,
                 onPress: () => selectedField("numberIdentify")
             },
             {
@@ -174,7 +223,8 @@ function PersonalInfo({user,setReloadUser,toasRef}){
             },
             {
                 iconName:"phone",
-                textData: user.phoneNumber ? user.phoneNumber : "Numero telefonico",
+                textData_Calling:   user.callingCode ? user.callingCode : infoUser.callingCode,
+                textData_Phone: user.phoneNumberUser ? user.phoneNumberUser : infoUser.phoneNumberUser,
                 onPress: () => selectedField("phoneNumber")
             },
             {
@@ -196,17 +246,22 @@ function PersonalInfo({user,setReloadUser,toasRef}){
                         valueField={user.displayName} 
                         setReloadUser={setReloadUser} 
                         setShowModalInfo={setShowModalInfo}
+                        toasRef={toasRef}
+                        uidUser={user.uid}
+                        setReloadInfoExternal={setReloadInfoExternal}
                     />
-                )
+                ) 
                 break;
             case "numberIdentify":
                 setRenderComponentInfo(
                     <DisplayDataForm 
                         typeField={key} 
-                        valueField={user.uid} 
+                        valueField={user.numberIdentify} 
                         setReloadUser={setReloadUser} 
                         setShowModalInfo={setShowModalInfo} 
                         toasRef={toasRef}
+                        uidUser={user.uid}
+                        setReloadInfoExternal={setReloadInfoExternal}
                     />
                 )
                 break;
@@ -218,6 +273,8 @@ function PersonalInfo({user,setReloadUser,toasRef}){
                         setReloadUser={setReloadUser} 
                         setShowModalInfo={setShowModalInfo} 
                         toasRef={toasRef}
+                        uidUser={user.uid}
+                        setReloadInfoExternal={setReloadInfoExternal}
                     />
                 )
                 break;
@@ -225,10 +282,12 @@ function PersonalInfo({user,setReloadUser,toasRef}){
                 setRenderComponentInfo(
                     <DisplayDataForm 
                         typeField={key} 
-                        valueField={user.phoneNumber} 
+                        valueField={ user.callingCode+"_"+user.phoneNumberUser } 
                         setReloadUser={setReloadUser} 
                         setShowModalInfo={setShowModalInfo} 
                         toasRef={toasRef}
+                        uidUser={user.uid}
+                        setReloadInfoExternal={setReloadInfoExternal}
                     />
                 )
                 break;
@@ -240,6 +299,8 @@ function PersonalInfo({user,setReloadUser,toasRef}){
                         setReloadUser={setReloadUser} 
                         setShowModalInfo={setShowModalInfo} 
                         toasRef={toasRef}
+                        uidUser={user.uid}
+                        setReloadInfoExternal={setReloadInfoExternal}
                     />
                 )
                 break;
@@ -251,7 +312,7 @@ function PersonalInfo({user,setReloadUser,toasRef}){
     const menuData = dataOptionsUser()
 
     return(
-        <View>
+        <ScrollView>
             {
                 map(menuData,(menu,index)=>(
                     <TouchableOpacity
@@ -269,7 +330,11 @@ function PersonalInfo({user,setReloadUser,toasRef}){
                                 />
                             </View>
                             <Text>
-                                {menu.textData}
+                                {
+                                  menu.iconName ==="phone" 
+                                  ?  "+"+menu.textData_Calling+" "+menu.textData_Phone
+                                  : menu.textData
+                                }
                             </Text>
                         </View>
 
@@ -282,8 +347,8 @@ function PersonalInfo({user,setReloadUser,toasRef}){
                  }
 
             </Modal>
-
-        </View>
+        <Loading isVisible={loading} text="Cargando..." />
+        </ScrollView>
         
     )
 }
@@ -308,7 +373,7 @@ function AppointmentsStats({user}){
 const styles = StyleSheet.create({
     containerHeader:{
         marginHorizontal:32,
-        paddingVertical: 30,
+        paddingVertical: 20,
         
     },
     container:{
@@ -376,10 +441,10 @@ const styles = StyleSheet.create({
     viewPersonalInfoContainer:{
         flexDirection:"row",
         alignItems: "center",
-        marginTop:15,
+        marginTop:20,
         backgroundColor: "#e3e6e6",
         paddingHorizontal:16,
-        paddingVertical: 8,
+        
         width: "90%",
         alignSelf: "center",
         borderRadius:20
@@ -399,7 +464,7 @@ const styles = StyleSheet.create({
         color: "#c1c1c1"
     },
     viewPersonalStats:{
-        paddingVertical: 15,
+        paddingVertical: 10,
         paddingHorizontal: 32,
         marginBottom: 5,
         backgroundColor: "#877f7e",

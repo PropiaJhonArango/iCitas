@@ -1,66 +1,81 @@
-import React, { useState,useRef } from 'react'
+import React, { useState } from 'react'
 import { isEmpty, size } from 'lodash';
 import { StyleSheet, Text, View,Dimensions,TouchableOpacity } from 'react-native'
 import {  Icon, Input } from 'react-native-elements';
-import Toast from 'react-native-easy-toast'
+import CountryPicker from 'react-native-country-picker-modal'
 
-import { updateProfile,reauthenticateFirebase,updateEmailFirebase,updatePasswordFirebase } from '../../utils/actions';
-import {validateEmail} from '../../utils/helpers'
+
+import { updateProfile,reauthenticateFirebase,updateEmailFirebase,updatePasswordFirebase,updatePhoneFirebase, updateDocument } from '../../utils/actions';
+import {getCountryCode, validateEmail} from '../../utils/helpers'
 import Loading from '../Loading';
 
-const screen = Dimensions.get("window")
 
-export default function DisplayNameForm({typeField,valueField,setReloadUser,setShowModalInfo,toasRef}) {
+
+export default function DisplayNameForm({typeField,valueField,setReloadUser,setShowModalInfo,toasRef,uidUser,setReloadInfoExternal}) {
+
+
 
 
     switch (typeField) {
         case "displayName":
              return(
-                <UpdateName valueField={valueField} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>    
+                <UpdateName 
+                    valueField={valueField} 
+                    setReloadUser={setReloadUser} 
+                    setShowModalInfo={setShowModalInfo} 
+                    uidUser={uidUser}
+                />    
              )
             break;
         case "numberIdentify":
-            // dataProperties ={
-            //     title: "Modificar Nro. Documento",
-            //     value: valueField
-            // }
             return (
-                <View></View>
+                <UpdateNumberIdentify 
+                    valueField={valueField} 
+                    setReloadInfoExternal={setReloadInfoExternal}
+                    setShowModalInfo={setShowModalInfo}
+                    uidUser={uidUser}
+                />
             )
             break;
         case "email":
             return (
-                <UpdateEmail valueField={valueField} setReloadUser={setReloadUser} setShowModalInfo={setShowModalInfo}/>
+                <UpdateEmail 
+                    valueField={valueField} 
+                    setReloadUser={setReloadUser} 
+                    setShowModalInfo={setShowModalInfo} 
+                    uidUser={uidUser}
+                    />
             )
             break;
         case "phoneNumber":
-            // dataProperties ={
-            //     title: "Modificar Nro, Telefonico.",
-            //     value: valueField
-            // }
+
             return (
-                <View></View>
+                <UpdatePhone 
+                    valueField={valueField} 
+                    setReloadInfoExternal={setReloadInfoExternal}
+                    setShowModalInfo={setShowModalInfo}
+                    uidUser={uidUser}
+                />
             )
             break;
         case "password":
-        // dataProperties ={
-        //     title: "Modificar Nro, Telefonico.",
-        //     value: valueField
-        // }
-        return (
-            <UpdatePassWord setShowModalInfo={setShowModalInfo} toasRef={toasRef}/>
-        )
+
+            return (
+                <UpdatePassWord 
+                    setShowModalInfo={setShowModalInfo} 
+                    toasRef={toasRef}
+                />
+            )
             break;
     }
 
 
 }
 
-function UpdateName({valueField,setReloadUser,setShowModalInfo}){
+function UpdateName({valueField,setReloadUser,setShowModalInfo,uidUser}){
     const [newName, setNewName] = useState(valueField)
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
-    
 
     const onSubmit = async() =>{
 
@@ -70,6 +85,9 @@ function UpdateName({valueField,setReloadUser,setShowModalInfo}){
 
         setLoading(true)     
         const result = await updateProfile({displayName: newName})    
+
+        const resultCollection = await updateDocument("Users",uidUser,{name: newName})
+
         setLoading(false)
 
         if(!result.statusResponse){
@@ -129,7 +147,7 @@ function UpdateName({valueField,setReloadUser,setShowModalInfo}){
     )
 }
 
-function UpdateEmail({valueField,setReloadUser,setShowModalInfo}){
+function UpdateEmail({valueField,setReloadUser,setShowModalInfo,uidUser}){
     const [showPassword, setShowPassword] = useState(false)
     const [newEmail, setNewEmail] = useState(valueField)
     const [currentPassword, setCurrentPassword] = useState(null)
@@ -154,6 +172,7 @@ function UpdateEmail({valueField,setReloadUser,setShowModalInfo}){
         }
 
         const resultupdateEmail = await updateEmailFirebase(newEmail) 
+        const resultCollection = await updateDocument("Users",uidUser,{email: newEmail})
         setLoading(false)
 
         if(!resultupdateEmail.statusResponse){
@@ -428,6 +447,182 @@ function UpdatePassWord({setShowModalInfo,toasRef}){
     )
 }
 
+function UpdatePhone({valueField,setReloadInfoExternal,setShowModalInfo,uidUser}){
+    
+    /*The valueField field for the phone brings a string of callingCode and phoneNumber separated by _*/
+    const initialCallingCode = valueField ? valueField.split("_")[0] : "57"
+    const initialPhone= valueField ? valueField.split("_")[1] : "CO"
+
+    const [callingCode, setCallingCode] = useState(initialCallingCode)
+    const [phone, setPhone] = useState(initialPhone) 
+
+    const [country, setCountry] = useState(getCountryCode(initialCallingCode))
+
+    const [errorPhone, setErrorPhone] = useState(null)
+    const [loading, setLoading] = useState(false)
+
+
+    const onSubmit = async() =>{
+        if(!validateForm()){
+            return
+        }
+
+        const userData ={
+            callingCode : callingCode,
+            phoneNumber: phone
+        }
+        
+        setLoading(true)
+        const resultCollection = await updateDocument("Users",uidUser,userData)
+        if(!resultCollection.statusResponse){
+            setErrorPhone("Error al actualizar el numero.")
+            setLoading(false)
+            return
+        }
+        setLoading(false)
+
+        setReloadInfoExternal(true)
+        setShowModalInfo(false)
+        
+        
+
+    }
+
+    const validateForm = () =>{
+        setErrorPhone(null)
+        let isValid = true
+
+        if(size(phone)<10){
+            setErrorPhone("Debes ingresar un numero valido")
+            isValid = false
+        }
+
+        return isValid
+    }
+
+    return(
+        <View style={styles.view}>
+                <Text style={styles.textTitle}>
+                    Modificar Telefono
+                </Text>
+                <View style={styles.viewPhone}>
+                    <View style={styles.viewCountry}> 
+
+                        <CountryPicker
+                            withFlag
+                            withCallingCode
+                            withFilter
+                            withCallingCodeButton
+                            countryCode={country}
+                            containerStyle={styles.countryPickerStyle}
+                            callingCode={callingCode}
+                            onSelect= {(country) =>{
+                                setCountry(country.cca2)
+                                setCallingCode(country.callingCode[0])
+                                
+
+                            }}
+                        />
+                    </View>
+                    
+                    <Input 
+                        placeholder="Numero celular..."
+                        defaultValue={phone}
+                        keyboardType="phone-pad"
+                        containerStyle={styles.inputPhone}
+                        onChange={(e) => setPhone(e.nativeEvent.text)}
+                        errorMessage={errorPhone}
+                    />
+                </View>
+
+                <TouchableOpacity 
+                    style={styles.btnSave}
+                    onPress={onSubmit}
+                >
+                    <Text style={styles.textSave}>
+                        Guardar
+                    </Text>
+                </TouchableOpacity>
+                <Loading isVisible={loading} text={"Actualizando Numero..."} />
+        </View>
+    )
+        
+}
+
+function UpdateNumberIdentify({valueField,setReloadInfoExternal,setShowModalInfo,uidUser}){
+    const [numberIdentify, setNumberIdentify] = useState(valueField)
+    const [errorNumberIdentify, setErrorNumberIdentify] = useState(null)
+    const [loading, setLoading] = useState(false)
+
+
+    const onSubmit = async() =>{
+        if(!validateForm()){
+            return
+        }
+        
+        setLoading(true)
+        const resultCollection = await updateDocument("Users",uidUser,{numberIdentify: numberIdentify})
+        if(!resultCollection.statusResponse){
+            setErrorNumberIdentify("Error al actualizar el numero.")
+            setLoading(false)
+            return
+        }
+        setLoading(false)
+        setReloadInfoExternal(true)
+        setShowModalInfo(false)
+        
+    
+    }
+
+    const validateForm = () =>{
+        setErrorNumberIdentify(null)
+        let isValid = true
+
+        if(isEmpty(numberIdentify)){
+            setErrorNumberIdentify("Debes ingresar tu numero de identificación.")
+            isValid = false
+        }
+
+        return isValid
+    }
+
+    return(
+        <View style={styles.view}>
+            <Text style={styles.textTitle}>
+                Modificar Identificación
+            </Text>
+            <Input 
+                placeholder="Ingresa tu numero de identidad."
+                containerStyle={styles.input}
+                defaultValue ={valueField} 
+                keyboardType="number-pad"
+                onChange={(e) => setNumberIdentify(e.nativeEvent.text)}
+                errorMessage={errorNumberIdentify}
+                label="Nro. Identidad"
+                leftIcon={
+                    <Icon
+                        type="font-awesome"
+                        name ="id-badge"
+                        iconStyle={styles.icon}
+                    />
+                }
+            />
+           
+            <TouchableOpacity 
+                style={styles.btnSave}
+                onPress={onSubmit}
+            >
+                <Text style={styles.textSave}>
+                    Guardar
+                </Text>
+            </TouchableOpacity>
+            <Loading isVisible={loading} text={"Actualizando Numero..."} />
+        </View>
+    )
+        
+}
+
+
 const styles = StyleSheet.create({
     view:{
         paddingVertical: 10
@@ -464,5 +659,20 @@ const styles = StyleSheet.create({
     textSave:{
         color: "#FFFFFF",
         fontWeight: "bold"
+    },
+    viewPhone:{
+        flexDirection:"row",
+        
+    },
+    countryPickerStyle:{
+        alignItems:"center",
+        marginTop: 10
+    },
+    viewCountry:{
+        marginVertical:7
+    },
+    inputPhone:{
+        marginBottom: 10, //para que no se pegue el boton del input
+        width:"80%"
     }
 })

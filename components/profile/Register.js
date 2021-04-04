@@ -5,7 +5,7 @@ import { Input,Icon } from 'react-native-elements'
 import * as Animatable from 'react-native-animatable'
 
 import {validateEmail} from '../../utils/helpers'
-import {registerUser,loginWithEmailAndPassword} from '../../utils/actions'
+import {registerUser,loginWithEmailAndPassword, addDocument, getCurrentUser, addDocumentWithId} from '../../utils/actions'
 import Loading from '../Loading'
 
 
@@ -28,6 +28,8 @@ export default function Register({setLogged}) {
 
     const onSubmit = async() =>{ 
 
+       
+
         if(!validateData()){
             return;
         }
@@ -38,6 +40,25 @@ export default function Register({setLogged}) {
         if(!resultRegister.statusResponse){
             setErrorEmail(resultRegister.error)
             setLoading(false)
+            return
+        }
+
+        const userData ={
+            name:"",
+            numberIdentify:"",
+            email: formData.email,
+            phoneNumber: "",
+            callingCode: "",
+            creadtedDate: new Date(),
+            isAppUser: true,
+            photoURL: "",
+            uidUser : getCurrentUser().uid
+        }
+
+        const resultNewUserCollection = await addDocumentWithId("Users",userData)
+
+        if(!resultNewUserCollection.statusResponse){
+            setErrorEmail(resultRegister.error)
             return
         }
 

@@ -61,7 +61,7 @@ export const uploadImage = async(image,path,name) =>{
 
     try {
         await ref.put(blob) 
-        const url = await firebase.storage().ref(`${path}/${name}`).getDownloadURL() //Obteniendo la ruta de como quedo la imagen
+        const url = await firebase.storage().ref(`${path}/${name}`).getDownloadURL()
         result.statusResponse = true
         result.url = url
     } catch (error) {
@@ -74,7 +74,7 @@ export const uploadImage = async(image,path,name) =>{
 export const updateProfile = async(data) =>{
     const result = { statusResponse: true, error: null}
     try {
-        await firebase.auth().currentUser.updateProfile(data) //mandamos los datos de lo que queremos actualizar
+        await firebase.auth().currentUser.updateProfile(data) 
     } 
     catch (error) {
         result.statusResponse = false
@@ -86,10 +86,10 @@ export const updateProfile = async(data) =>{
 export const reauthenticateFirebase = async(password) =>{
     const result = { statusResponse: true, error: null}
     const user = getCurrentUser()
-    const credentials = firebase.auth.EmailAuthProvider.credential(user.email,password) //Para obtener las credenciales
+    const credentials = firebase.auth.EmailAuthProvider.credential(user.email,password)
 
     try {
-        await user.reauthenticateWithCredential(credentials) //Para reautenticar
+        await user.reauthenticateWithCredential(credentials) 
     } 
     catch (error) {
         result.statusResponse = false
@@ -121,3 +121,51 @@ export const updatePasswordFirebase = async(newPassword) =>{
     }
     return result
 }
+
+export const addDocumentWithId = async(collection,data) =>{
+    const result = { statusResponse: true, error: null}
+    try {
+        await db.collection(collection).doc(data.uidUser).set(data) 
+    } 
+    catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result
+}
+
+export const  updateDocument = async(collection,id,data) => {
+    const result ={
+        statusResponse : false,
+        error : null
+    }
+
+    try {
+        await db.collection(collection).doc(id).update(data)
+        result.statusResponse=true
+    } catch (error) {
+        result.error = error
+    }
+
+    return result
+}
+
+export const getCollectionWithId =  async(collection,id) =>{
+    const result = {
+        statusResponse: false,
+        data: null,
+        error: null
+    }
+
+    try {
+        const data = await db.collection(collection).doc(id).get()
+        const arrayData = data.data()
+        result.statusResponse = true
+        result.data = arrayData
+    } catch (error) {
+        result.error = error
+    }
+
+    return result
+}
+
