@@ -1,20 +1,31 @@
 import React, { useState } from 'react'
 import { isEmpty, size } from 'lodash';
-import { StyleSheet, Text, View,Dimensions,TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View,TouchableOpacity } from 'react-native'
 import {  Icon, Input } from 'react-native-elements';
 import CountryPicker from 'react-native-country-picker-modal'
 
 
-import { updateProfile,reauthenticateFirebase,updateEmailFirebase,updatePasswordFirebase,updatePhoneFirebase, updateDocument } from '../../utils/actions';
+import {    updateProfile,
+            reauthenticateFirebase,
+            updateEmailFirebase,
+            updatePasswordFirebase, 
+            updateDocument 
+        } from '../../utils/actions';
 import {getCountryCode, validateEmail} from '../../utils/helpers'
 import Loading from '../Loading';
 
 
 
-export default function DisplayNameForm({typeField,valueField,setReloadUser,setShowModalInfo,toasRef,uidUser,setReloadInfoExternal}) {
-
-
-
+export default function DisplayNameForm(
+{
+    typeField,
+    valueField,
+    setReloadUser,
+    setShowModalInfo,
+    uidUser,
+    setReloadInfoExternal
+}
+) {
 
     switch (typeField) {
         case "displayName":
@@ -63,7 +74,6 @@ export default function DisplayNameForm({typeField,valueField,setReloadUser,setS
             return (
                 <UpdatePassWord 
                     setShowModalInfo={setShowModalInfo} 
-                    toasRef={toasRef}
                 />
             )
             break;
@@ -90,7 +100,7 @@ function UpdateName({valueField,setReloadUser,setShowModalInfo,uidUser}){
 
         setLoading(false)
 
-        if(!result.statusResponse){
+        if(!result.statusResponse || !resultCollection.statusResponse){
             setError("Error al actulizar nombres y apellidos, intenta mas tarde.")
             return
         }
@@ -173,9 +183,10 @@ function UpdateEmail({valueField,setReloadUser,setShowModalInfo,uidUser}){
 
         const resultupdateEmail = await updateEmailFirebase(newEmail) 
         const resultCollection = await updateDocument("Users",uidUser,{email: newEmail})
+
         setLoading(false)
 
-        if(!resultupdateEmail.statusResponse){
+        if(!resultupdateEmail.statusResponse || !resultCollection.statusResponse){
             setErrorEmail("No se pudo cambiar por este correo, ya se encuentra en uso.")
             return
         }
@@ -190,12 +201,12 @@ function UpdateEmail({valueField,setReloadUser,setShowModalInfo,uidUser}){
         setErrorCurrentPassword(null)
         let isValid = true
 
-        if(!validateEmail(newEmail)){ //Valida si es correcto o valido
+        if(!validateEmail(newEmail)){ 
             setErrorEmail("Debes ingresar un email valido.")
             isValid = false
         }
 
-        if(newEmail === valueField){ //Si nombre que ingreso es igual al nombre actual
+        if(newEmail === valueField){ 
             setErrorEmail("Debes ingresar un email diferente al actual.")
             isValid = false
         }
@@ -270,7 +281,7 @@ function UpdateEmail({valueField,setReloadUser,setShowModalInfo,uidUser}){
     )
 }
 
-function UpdatePassWord({setShowModalInfo,toasRef}){
+function UpdatePassWord({setShowModalInfo}){
     const [currentPassword, setCurrentPassword] = useState(null)
     const [newPassword, setNewPassword] = useState(null)
     const [confirmNewPassword, setConfirmNewPassword] = useState(null)
@@ -307,7 +318,6 @@ function UpdatePassWord({setShowModalInfo,toasRef}){
             setErrorNewPassword("No se pudo actualizar la contraseña.")
             return
         }
-        toasRef.current.show("Se ha actualizado la contraseña.",3000) 
         setShowModalInfo(false)
         
     }
@@ -318,7 +328,7 @@ function UpdatePassWord({setShowModalInfo,toasRef}){
         setErrorConfirmNewPassword(null)
         let isValid = true
 
-        if(isEmpty(currentPassword)){ //Valida si es correcto o valido
+        if(isEmpty(currentPassword)){ 
             setErrorCurrentPassword("Debes ingresar tu contraseña actual.")
             isValid = false
         }
@@ -448,10 +458,10 @@ function UpdatePassWord({setShowModalInfo,toasRef}){
 }
 
 function UpdatePhone({valueField,setReloadInfoExternal,setShowModalInfo,uidUser}){
-    
+
     /*The valueField field for the phone brings a string of callingCode and phoneNumber separated by _*/
     const initialCallingCode = valueField ? valueField.split("_")[0] : "57"
-    const initialPhone= valueField ? valueField.split("_")[1] : "CO"
+    const initialPhone= valueField && valueField.split("_")[1] 
 
     const [callingCode, setCallingCode] = useState(initialCallingCode)
     const [phone, setPhone] = useState(initialPhone) 
@@ -484,8 +494,6 @@ function UpdatePhone({valueField,setReloadInfoExternal,setShowModalInfo,uidUser}
         setReloadInfoExternal(true)
         setShowModalInfo(false)
         
-        
-
     }
 
     const validateForm = () =>{
@@ -514,13 +522,11 @@ function UpdatePhone({valueField,setReloadInfoExternal,setShowModalInfo,uidUser}
                             withFilter
                             withCallingCodeButton
                             countryCode={country}
-                            containerStyle={styles.countryPickerStyle}
                             callingCode={callingCode}
+                            containerStyle={styles.countryPickerStyle}
                             onSelect= {(country) =>{
                                 setCountry(country.cca2)
                                 setCallingCode(country.callingCode[0])
-                                
-
                             }}
                         />
                     </View>
@@ -561,7 +567,9 @@ function UpdateNumberIdentify({valueField,setReloadInfoExternal,setShowModalInfo
         }
         
         setLoading(true)
+
         const resultCollection = await updateDocument("Users",uidUser,{numberIdentify: numberIdentify})
+
         if(!resultCollection.statusResponse){
             setErrorNumberIdentify("Error al actualizar el numero.")
             setLoading(false)
@@ -580,6 +588,11 @@ function UpdateNumberIdentify({valueField,setReloadInfoExternal,setShowModalInfo
 
         if(isEmpty(numberIdentify)){
             setErrorNumberIdentify("Debes ingresar tu numero de identificación.")
+            isValid = false
+        }
+
+        if( valueField === numberIdentify){
+            setErrorNumberIdentify("Debes ingresar un numero de identificación diferente al actual.")
             isValid = false
         }
 
@@ -628,7 +641,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10
     },
     input:{
-        marginBottom: 10, //para que no se pegue el boton del input
+        marginBottom: 10, 
     },
     btnContainer:{
         width: "95%"
@@ -672,7 +685,7 @@ const styles = StyleSheet.create({
         marginVertical:7
     },
     inputPhone:{
-        marginBottom: 10, //para que no se pegue el boton del input
+        marginBottom: 10, 
         width:"80%"
     }
 })

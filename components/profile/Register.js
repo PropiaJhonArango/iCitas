@@ -93,7 +93,7 @@ export default function Register({setLogged}) {
         }
 
         if(size(formData.confirmPassword)<6){
-            setErrorConfirm("Debes ingresar una confirmación de contraseña de al menos seis caracteres.")
+            setErrorConfirmPassword("Debes ingresar una confirmación de contraseña de al menos seis caracteres.")
             isValid = false
         }
 

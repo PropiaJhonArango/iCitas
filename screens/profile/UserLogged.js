@@ -1,12 +1,11 @@
-import React,{useState,useEffect,useRef, useCallback} from 'react'
-import { LinearGradient } from 'expo-linear-gradient'
-import { Text, View,ScrollView,Alert,StyleSheet } from 'react-native'
+import React,{useState,useEffect, useCallback} from 'react'
+import { Text, View,ScrollView,Alert,StyleSheet,TouchableOpacity } from 'react-native'
 import { Icon,Image } from 'react-native-elements'
-import { map } from 'lodash'
-import { TouchableOpacity } from 'react-native'
-import OptionesMenu from "react-native-option-menu"
-import Toast from 'react-native-easy-toast' 
 import { useFocusEffect } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { map } from 'lodash'
+import OptionesMenu from "react-native-option-menu"
+
 
 import { getCurrentUser,uploadImage,updateProfile, closeSession, updateDocument, getCollectionWithId } from '../../utils/actions'
 import { loadImageFromGallery } from '../../utils/helpers'
@@ -21,15 +20,10 @@ export default function UserLogged({setLogged}) {
     const [reloadUser, setReloadUser] = useState(false)
     const [loading, setLoading] = useState(false)
     const [loadingText, setLoadingText] = useState("")
-    const toasRef = useRef()
-
-
 
     useEffect(() => {
-
         setUser(getCurrentUser())
         setReloadUser(false)
-        
         
     }, [reloadUser])
 
@@ -54,12 +48,10 @@ export default function UserLogged({setLogged}) {
                             user={user} 
                             setUser={setUser}
                             setReloadUser={setReloadUser} 
-                            toasRef={toasRef}
                         />
 
                         <Loading isVisible={loading} text={loadingText} />
                         
-                        <Toast ref={toasRef} position="bottom" opacity={0.7}/>
                     </ScrollView>
 
                 )
@@ -69,7 +61,8 @@ export default function UserLogged({setLogged}) {
     )
 }
 
-function Header({user,setLoading, setLoadingText,setReloadUser,setLogged}){
+function Header({user,setLoading, setLoadingText,setLogged}){
+    
     const CloseSessionUser =() =>{
         closeSession()
         setLogged(false)
@@ -98,7 +91,8 @@ function Header({user,setLoading, setLoadingText,setReloadUser,setLogged}){
 
         const resultUpdateProfile = await updateProfile({photoURL: resultUploadImage.url})
 
-        const resultUpdateDocument = await updateDocument("Users",user.uid,{photoURL: resultUploadImage.url})
+        await updateDocument("Users",user.uid,{photoURL: resultUploadImage.url})
+
         setLoading(false)
         if(resultUpdateProfile.statusResponse){
             setPhotoUrl(resultUploadImage.url)
@@ -213,7 +207,12 @@ function PersonalInfo({user,setUser,setReloadUser,toasRef}){
             },
             {
                 iconName:"id-badge",
-                textData: user.numberIdentify ? user.numberIdentify :  infoUser.numberIdentify,
+
+                /*If the user has not defined a name, "Identification number" is displayed by default*/
+                 textData:  user.numberIdentify 
+                            ? user.numberIdentify 
+                            :  (infoUser.numberIdentify ? infoUser.numberIdentify : "Numero de identificación"),
+                
                 onPress: () => selectedField("numberIdentify")
             },
             {
@@ -282,7 +281,11 @@ function PersonalInfo({user,setUser,setReloadUser,toasRef}){
                 setRenderComponentInfo(
                     <DisplayDataForm 
                         typeField={key} 
-                        valueField={ user.callingCode+"_"+user.phoneNumberUser } 
+
+                        /*Because the phone is divided into two parts (Country code and phone number) 
+                        I send it concatenated by a script and then make the split*/
+
+                        valueField={ user.callingCode && user.callingCode+"_"+user.phoneNumberUser  } 
                         setReloadUser={setReloadUser} 
                         setShowModalInfo={setShowModalInfo} 
                         toasRef={toasRef}
@@ -329,10 +332,14 @@ function PersonalInfo({user,setUser,setReloadUser,toasRef}){
                                     size={30}
                                 />
                             </View>
+                            {
+                                
+                            }
                             <Text>
                                 {
+                                  
                                   menu.iconName ==="phone" 
-                                  ?  "+"+menu.textData_Calling+" "+menu.textData_Phone
+                                  ?  (menu.textData_Calling ? "+"+menu.textData_Calling+" "+menu.textData_Phone: "Numero Telefonico") 
                                   : menu.textData
                                 }
                             </Text>
