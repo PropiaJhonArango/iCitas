@@ -60,14 +60,7 @@ export default function Navigation({setLogged}) {
                      
                      inactiveTintColor:"#047ca4",
                      activeTintColor: "#f4544c",
-                     style: {
-                        backgroundColor:'transparent',
-                        borderTopWidth: 0,
-                        position: 'absolute',
-                        elevation: 0  
-                      }
-                      
-                                    
+             
                  }}
                 screenOptions ={({route}) => ({
 

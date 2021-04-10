@@ -7,14 +7,14 @@ export default function Appointments({navigation}) {
         <View style={styles.viewBodyAppointments}>
             <Text>Estoy en Las Citas</Text>
             <Icon
-                    type="font-awesome"
-                    name="plus"
-                    color="#f4544c"
-                    reverse={true}
-                    containerStyle={styles.btnContainer}
-                    size={30}
-                    onPress={()=> navigation.navigate("add-appointment")}
-                />
+                type="font-awesome"
+                name="plus"
+                color="#f4544c"
+                reverse={true}
+                containerStyle={styles.btnContainer}
+                size={30}
+                onPress={()=> navigation.navigate("add-appointment")}
+            />
         </View>
     )
 }

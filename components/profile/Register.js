@@ -49,7 +49,7 @@ export default function Register({setLogged}) {
             email: formData.email,
             phoneNumber: "",
             callingCode: "",
-            creadtedDate: new Date(),
+            createdDate: new Date(),
             isAppUser: true,
             photoURL: "",
             uidUser : getCurrentUser().uid
