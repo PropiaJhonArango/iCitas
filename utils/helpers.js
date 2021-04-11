@@ -1,7 +1,8 @@
-import { Alert } from 'react-native'
+import { Alert, ImageEditor } from 'react-native'
 import * as Permissions from 'expo-permissions'
 import * as ImagePicker from 'expo-image-picker'
 import * as Location from 'expo-location'
+import { reject } from 'lodash'
 
 /*Dictionary of countries with their respective codes*/
 const countryList =
@@ -1213,6 +1214,31 @@ export const loadImageFromGallery = async (array) =>{
     const result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
         aspect: array /*image Aspect 3:4, 2:2 */
+    })
+
+    if(result.cancelled){
+        return response
+    }
+
+    response.status = true
+    response.image = result.uri 
+
+    return response
+}
+
+export const loadImageFromGalleryWithoutEditing = async () =>{
+    const response = {status: false, image: null}
+
+    const resultPermissions = await Permissions.askAsync(Permissions.CAMERA)
+
+    if(resultPermissions.status === "denied"){
+        Alert.alert("Debes de darle permiso para acceder a las imagenes del telefono.")
+        return response
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: false
+        // aspect: array /*image Aspect 3:4, 2:2 */
     })
 
     if(result.cancelled){

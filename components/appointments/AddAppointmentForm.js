@@ -11,7 +11,7 @@ import MapView from 'react-native-maps'
 
 
 import { addDocumentWithoutId, getCurrentUser, uploadImage} from '../../utils/actions'
-import { getCurrentLocation, loadImageFromGallery } from '../../utils/helpers'
+import { getCurrentLocation, loadImageFromGalleryWithoutEditing } from '../../utils/helpers'
 import Modal from '../Modal'
 
 LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -478,7 +478,7 @@ function InputMultiSelect(
 function UploadImage({imagesSelected,setImagesSelected}){
 
     const imageSelect = async() =>{
-        const response = await loadImageFromGallery([4,3]) 
+        const response = await loadImageFromGalleryWithoutEditing() 
         if(!response.status){
             return
         }
