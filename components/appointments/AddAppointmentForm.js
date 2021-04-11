@@ -1,16 +1,18 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { StyleSheet, Text, View,ScrollView,TouchableOpacity,LogBox,Alert } from 'react-native'
-import { Avatar, Icon, Input } from 'react-native-elements'
+import { Avatar, Button, Icon, Input } from 'react-native-elements'
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import moment from 'moment'
 import MultiSelect from 'react-native-multiple-select';
 import { filter, isEmpty, map, size } from 'lodash'
 import uuid from 'random-uuid-v4'
+import MapView from 'react-native-maps'
 
 
 
 import { addDocumentWithoutId, getCurrentUser, uploadImage} from '../../utils/actions'
-import { loadImageFromGallery } from '../../utils/helpers'
+import { getCurrentLocation, loadImageFromGallery } from '../../utils/helpers'
+import Modal from '../Modal'
 
 LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
 
@@ -21,11 +23,12 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
     const [errorDateAndTime, setErrorDateAndTime] = useState(null)
     const [errorAddress, setErrorAddress] = useState(null)
     const [errorDoctor, setErrorDoctor] = useState(null)
-    const [errorNotes, setErrorNotes] = useState(null)
     const [imagesSelected, setImagesSelected] = useState([])
     const [idTags, setIdTags] = useState([])
     const [selectedPatient, setSelectedPatient] = useState([])
     const [userData, setUserData] = useState(getCurrentUser())
+    const [visibleMap, setVisibleMap] = useState(false)
+    const [locationAppointment, setLocationAppointment] = useState(null)
 
     const onChange =(e,type) =>{
         setFormData({...formData,[type] : e.nativeEvent.text})
@@ -84,7 +87,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
             name: formData.name,
             dateAndTime: formData.dateAndTime,
             address: formData.address,
-            location: "",
+            location: locationAppointment,
             idPatient: formData.idPatient,
             namePatient: getNamePatientById(formData.idPatient),
             doctor: formData.doctor,
@@ -167,6 +170,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
                 keyError={errorName}
                 iconName="commenting-o"
                 isMultiline={false}
+                valueField={formData.name}
             />
 
             {/* Input Date and Time */}
@@ -174,13 +178,15 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
                 formData={formData}
                 setFormData={setFormData}
                 errorDateAndTime={errorDateAndTime}
-
+                
             />
 
             {/*Input address and location*/}
             <InputMapForm 
                 onChange={onChange}
                 errorAddress={errorAddress}
+                setVisibleMap={setVisibleMap}
+                locationAppointment={locationAppointment}
             />
 
             {/*Input  patient*/}
@@ -207,6 +213,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
                 keyError={errorDoctor}
                 iconName="user-md"
                 isMultiline={false}
+                valueField={formData.doctor}
             />
 
             {/*Input  tags*/}
@@ -232,13 +239,12 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
                     containerStyle={styles.textArea}
                     defaultValue={formData.notes}
                     onChange={(e) => onChange(e, "notes")}
-                    errorMessage={errorNotes}
                     label="Notas"
                     rightIcon={
                         <Icon 
                             type="font-awesome"
                             name="comments-o"
-                            iconStyle={styles.icon}
+                            color = {formData.notes ? "#22af1b" : "#c2c2c2"}
                         />
                     }
                 />
@@ -252,6 +258,13 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
                     setImagesSelected= {setImagesSelected}
                 />
             </View>
+
+            <MapAppointment 
+                visibleMap={visibleMap}
+                setVisibleMap={setVisibleMap}
+                setLocationAppointment={setLocationAppointment}
+                toasRef={toasRef}
+            />
 
             <View style={styles.viewBody}>
                  <TouchableOpacity 
@@ -294,24 +307,23 @@ function FormAddInput (
         keyItemFormData,
         keyError,
         iconName,
-        isMultiline
+        isMultiline,
+        valueField
     }
     ){
     return(
         <View style={ keyItemFormData === "doctor" ? styles.viewInput  : styles.viewBody}>
             <Input 
-                    placeholder={placeholderInput}  //"Nombre o descripcion de la cita."
-                    label={labelInput}  //"Nombre Cita"
-                    onChange ={(e) =>   onChange(e, keyItemFormData) /*onChange(e,"name")*/}
-                    errorMessage= {keyError}//{errorName}
+                    placeholder={placeholderInput}  
+                    label={labelInput}  
+                    onChange ={(e) =>   onChange(e, keyItemFormData) }
+                    errorMessage= {keyError}
                     multiline={isMultiline}
-                    rightIcon={
-                        <Icon 
-                            type="font-awesome"
-                            name={ iconName/*"commenting-o"*/}
-                            iconStyle={styles.icon}
-                        />
-                    }
+                    rightIcon={{
+                        type:"font-awesome",
+                        name :iconName,
+                        color: valueField ? "#22af1b" : "#c2c2c2"
+                    }}
                 />
         </View>
     )
@@ -356,7 +368,7 @@ function InputCalendarForm({formData,setFormData,errorDateAndTime}){
                                 <Icon 
                                     type="font-awesome"
                                     name="calendar"
-                                    iconStyle={styles.icon}
+                                    color = {formData.dateAndTime ? "#22af1b" : "#c2c2c2"}
                                 />
                             </TouchableOpacity>
                         }
@@ -375,23 +387,21 @@ function InputCalendarForm({formData,setFormData,errorDateAndTime}){
     )
 }
 
-function InputMapForm({onChange,errorAddress,toasRef}){
-    const [addressSelected, setAddressSelected] = useState("")
+function InputMapForm({onChange,errorAddress,setVisibleMap,locationAppointment}){
 
     return(
         <View style={styles.viewBody}>
 
             <Input 
                 placeholder="Dirección de la cita"
-                defaultValue={addressSelected}
                 onChange={(e) => onChange(e, "address")}
                 errorMessage={errorAddress}
-                label="Dirección o Clinica"
+                label="Dirección ó Clinica"
                 rightIcon ={{
                     type:"font-awesome",
-                    name:"map-marker",
-                    color: "#c2c2c2",
-                    // onPress:() => setIsVisibleMap(true)
+                    name: locationAppointment ? "check-square-o"  : "map-marker",
+                    color: locationAppointment ? "#22af1b": "#c2c2c2",
+                    onPress:() => setVisibleMap(true)
                 }}
             />
         </View>
@@ -465,12 +475,11 @@ function InputMultiSelect(
     )
 }
 
-function UploadImage({/*toasRef,*/imagesSelected,setImagesSelected}){
+function UploadImage({imagesSelected,setImagesSelected}){
 
     const imageSelect = async() =>{
         const response = await loadImageFromGallery([4,3]) 
         if(!response.status){
-            // toasRef.current.show("No has seleccionado ninguna imagen",3000)
             return
         }
         setImagesSelected([...imagesSelected, response.image])
@@ -478,7 +487,7 @@ function UploadImage({/*toasRef,*/imagesSelected,setImagesSelected}){
 
     const removeImage =(image) =>{
         Alert.alert(
-            "Eliminar Imagen", //
+            "Eliminar Imagen",
             "¿Estas seguro de eliminar?",
             [
                 {
@@ -513,10 +522,11 @@ function UploadImage({/*toasRef,*/imagesSelected,setImagesSelected}){
                     >
                         <Icon
                         type="font-awesome"
-                        name="picture-o"
-                        color="#7a7a7a"
+                        name= {size(imagesSelected) > 0 ? "plus" :"picture-o"}
+                        color= {size(imagesSelected) > 0 ? "#22af1b": "#7a7a7a"}
                         containerStyle={styles.containerIcon}
                         onPress={imageSelect}
+                        
                         
                     />
                     </TouchableOpacity>
@@ -541,6 +551,67 @@ function UploadImage({/*toasRef,*/imagesSelected,setImagesSelected}){
 
 }
 
+function MapAppointment({visibleMap,setVisibleMap,setLocationAppointment,toasRef}){
+    const [newRegionAppointment, setNewRegionAppointment] = useState(null)
+
+    useEffect(() => {
+        (async()=>{
+            const response = await getCurrentLocation()
+            if(response.status){
+                setNewRegionAppointment(response.location)
+            
+            }
+        })()
+    }, [])
+
+
+    const confirmLocation =() =>{
+        setLocationAppointment(newRegionAppointment)
+        toasRef.current.show("Ubicacion de la clinica guardada correctamente.",3000)
+        setVisibleMap(false)
+    }
+
+    return(
+        <Modal isVisible={visibleMap} setVisible={setVisibleMap}>
+            <View>
+                {
+                    newRegionAppointment &&
+                    (
+                        <MapView 
+                            style={styles.mapStyle}
+                            initialRegion={newRegionAppointment}
+                            showsUserLocation={true}
+                            onRegionChange={(region) =>setNewRegionAppointment(region)}
+                        >
+                            <MapView.Marker 
+                                coordinate={{
+                                    latitude: newRegionAppointment.latitude,
+                                    longitude: newRegionAppointment.longitude
+                                }}
+                                draggable 
+                            />
+                        </MapView>
+                    )
+                }
+                <View style={styles.viewMapBtn}>
+                    <Button 
+                        title="Guardar Ubicación "
+                        containerStyle ={styles.viewMapBtnContainerSave}
+                        buttonStyle={styles.viewMapBtnSave}
+                        onPress={() =>confirmLocation()}
+                    />
+                    <Button 
+                    
+                        title="Cancelar"
+                        containerStyle ={styles.viewMapBtnContainerCancel}
+                        buttonStyle={styles.viewMapBtnCancel}
+                        onPress={() => setVisibleMap(false)}
+                    />
+                </View>
+            </View>
+        </Modal>
+    )
+}
 
 const styles = StyleSheet.create({
 
@@ -561,7 +632,7 @@ const styles = StyleSheet.create({
         marginLeft:10 
     },
     icon:{
-        color: "#c1c1c1",
+        // color: "#c1c1c1",
         marginRight:10
     },
     viewBody:{
@@ -641,5 +712,26 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         fontWeight: "bold"
     },
+    mapStyle:{
+        width: "100%",
+        height: 550
+    },
+    viewMapBtn:{
+        flexDirection: "row",
+        justifyContent: "space-around",
+        marginTop: 10
+    },
+    viewMapBtnContainerSave:{
+        paddingRight: 5
+    },
+    viewMapBtnContainerCancel:{
+        paddingLeft: 5
+    },
+    viewMapBtnCancel:{
+        backgroundColor: "#f4544c"
+    },
+    viewMapBtnSave:{
+        backgroundColor: "#047ca4"
+    }
     
 })

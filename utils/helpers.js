@@ -1,6 +1,7 @@
+import { Alert } from 'react-native'
 import * as Permissions from 'expo-permissions'
 import * as ImagePicker from 'expo-image-picker'
-import { Alert } from 'react-native'
+import * as Location from 'expo-location'
 
 /*Dictionary of countries with their respective codes*/
 const countryList =
@@ -1236,4 +1237,23 @@ export const getCountryCode =(countryCallingCode) =>{
     const country = countryList.filter(country => country.countryCallingCode ===countryCallingCode)
     const countryCode = country.map(coun => coun.countryCode)[0]
     return countryCode
+}
+
+export const getCurrentLocation = async() =>{
+    const response  ={status: false, location:null}
+    const resultPermissions = await Permissions.askAsync(Permissions.LOCATION)
+    if(resultPermissions.status =="denied"){
+        Alert.alert("Debes dar permisos para la localización")
+        return response
+    }
+    const position = await Location.getCurrentPositionAsync({})
+    const location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        latitudeDelta : 0.001,
+        longitudeDelta :0.001
+    }
+    response.status = true
+    response.location = location
+    return response
 }
