@@ -1,6 +1,5 @@
 import {firebaseApp} from './firebase'
 import * as firebase from 'firebase'
-import 'firebase/firestore'
 import { fileToBlob } from './helpers'
 import { LogBox} from 'react-native'
 
@@ -181,3 +180,44 @@ export const getCollectionWithId =  async(collection,id) =>{
     return result
 }
 
+export const getAppointments = async(limitAppointments) => {
+    const result = { statusResponse : true, error: null, appointments: [], startAppointment: null}
+    try {
+        const response = await db.collection("Appointments").orderBy("createAt", "desc").limit(limitAppointments).get()
+        if(response.docs.length > 0){
+            result.startAppointment = response.docs[response.docs.length-1]
+        }
+        response.forEach(doc => {
+            const appointment = doc.data()
+            result.appointments.push(appointment)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}
+
+export const getMoreAppointments = async(limitAppointments, startAppointment) => {
+    const result = { statusResponse : true, error: null, appointments: [], startAppointment: null}
+    try {
+        const response = await db
+            .collection("Appointments")
+            .orderBy("createAt", "desc")
+            .startAfter(startAppointment.data().createAt)
+            .limit(limitAppointments)
+            .get()
+        if(response.docs.length > 0){
+            result.startAppointment = response.docs[response.docs.length-1]
+        }
+        response.forEach(doc => {
+            const appointment = doc.data()
+            result.appointments.push(appointment)
+        });
+    } catch (error) {
+        
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}
