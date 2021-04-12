@@ -16,9 +16,8 @@ export default function HistoryAppointmentsStack() {
                 name="historyAppointment"
                 component={HistoryAppointments}
                 options={{
-                            title:"Citas Antiguas",
-                            headerTitleAlign:"center"
-                        }}
+                    headerShown:false
+                }} 
            />
        </Stack.Navigator>
     )

@@ -186,6 +186,7 @@ export const getAppointments = async(limitAppointments) => {
     try {
         const response = await db
                 .collection("Appointments")
+                .orderBy("dateAndTime", "asc")
                 .where("dateAndTime", ">=", new Date())
                 .limit(limitAppointments).get()
         if(response.docs.length > 0){
@@ -208,9 +209,9 @@ export const getMoreAppointments = async(limitAppointments, startAppointment) =>
     try {
         const response = await db
             .collection("Appointments")
-            // .orderBy("createAt", "desc")
+            .orderBy("dateAndTime", "asc")
             .where("dateAndTime", ">=", new Date())
-            .startAfter(startAppointment.data().createAt)
+            .startAfter(startAppointment.data().dateAndTime)
             .limit(limitAppointments)
             .get()
         if(response.docs.length > 0){
@@ -230,25 +231,53 @@ export const getMoreAppointments = async(limitAppointments, startAppointment) =>
     return result 
 }
 
-export const getAppointmentsExpired = async() => {
-    const result = { statusResponse : true, error: null, appointments: []}
+export const getAppointmentsExpired = async(limitAppointments) => {
+    const result = { statusResponse : true, error: null, appointments: [],startAppointment: null}
     try {
 
-        //const date = firebase.firestore.Timestamp.fromDate(new)
-
-        const response = await db.collection("Appointments").where("dateAndTime", "<", new Date()).get()
+        const response = await db
+        .collection("Appointments")
+        .orderBy("dateAndTime", "desc")
+        .where("dateAndTime", "<", new Date())
+        .limit(limitAppointments)
+        .get()
         
         if(response.docs.length > 0){
-        //     result.startAppointment = response.docs[response.docs.length-1]
+            result.startAppointment = response.docs[response.docs.length-1]
         }
         response.forEach(doc => {
-             const appointment = doc.data()
-             result.appointments.push(appointment)
+            const appointment = doc.data()
+            result.appointments.push(appointment)
         });
     } catch (error) {
         result.statusResponse = false
         result.error = error
     }
-    console.log(size(result.appointments))
+    return result 
+}
+
+export const getMoreAppointmentsExpired = async(limitAppointments, startAppointment) => {
+    const result = { statusResponse : true, error: null, appointments: [], startAppointment: null}
+    try {
+
+        const response = await db
+        .collection("Appointments")
+        .orderBy("dateAndTime", "desc")
+        .where("dateAndTime", "<", new Date())
+        .startAfter(startAppointment.data().dateAndTime)
+        .limit(limitAppointments)
+        .get()
+        
+        if(response.docs.length > 0){
+            result.startAppointment = response.docs[response.docs.length-1]
+        }
+        response.forEach(doc => {
+            const appointment = doc.data()
+            result.appointments.push(appointment)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
     return result 
 }
