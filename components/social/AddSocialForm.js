@@ -207,6 +207,8 @@ function InputPhone({onChange}){
 
 function InputImage ({setImageProfile,imageProfile}){
 
+    const [photoUrl, setPhotoUrl] = useState() 
+
 
     const updateProfilePhoto = async() =>{
 
@@ -215,6 +217,7 @@ function InputImage ({setImageProfile,imageProfile}){
         if(!resultImageSelected.status){
             return
         }
+        setPhotoUrl(resultImageSelected.image)
         setImageProfile(resultImageSelected.image)
  
         // const resultUploadImage = await uploadImage(resultImageSelected.image,"avatars",user.uid)
@@ -256,8 +259,8 @@ function InputImage ({setImageProfile,imageProfile}){
                         source={
 
                             // require("../../assets/avatar-default.jpg")
-                            imageProfile
-                            ? {uri: imageProfile}
+                            photoUrl
+                            ? {uri: photoUrl}
                             : require("../../assets/avatar-default.jpg")
                         }
                         style={styles.profilePhoto}
