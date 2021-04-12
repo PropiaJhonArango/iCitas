@@ -5,53 +5,65 @@ import { useFocusEffect } from '@react-navigation/native'
 import { size } from 'lodash'
 
 
+
+import { getAppointments, getMoreAppointments } from '../../utils/actions'
 import ListAppointments from './ListAppointments'
 import Loading from '../../components/Loading'
-import { getAppointments, getMoreAppointments } from '../../utils/actions'
 
 export default function Appointments({navigation}) {
     const [startAppointment, setStartAppointment] = useState(null)
-    const [user, setUser] = useState(null)
     const [appointments, setAppointments] = useState([])
     const [loading, setLoading] = useState(false)
 
   
 
-    const limitAppointments = 7
+    const limitAppointments = 12
+
 
     useFocusEffect(
         useCallback(() => {
-            const getData = async()=> {
+            async function getData() {
                 setLoading(true)
-                console.log("Esta En El Primero")
                 const response = await getAppointments(limitAppointments)
                 if (response.statusResponse) {
                     setStartAppointment(response.startAppointment)
                     setAppointments(response.appointments)
                 }
+                
                 setLoading(false)
             }
             getData()
+            
         }, [])
+        
     )
 
+    
+
     const handleLoadMore = async() => {
-        console.log("Esta en el segundo")
         if(!startAppointment) {
             return
         }
 
-        setLoading(true)
+        // setLoading(true)
         const response = await getMoreAppointments(limitAppointments, startAppointment)
         if(response.statusResponse){
             setStartAppointment(response.startAppointment)
             setAppointments([...appointments, ...response.appointments])
         }
-        setLoading(false)
+        // setLoading(false)
     }
+
+
     
     return (
-        <View style={styles.viewBodyAppointments}>
+        <View style={styles.viewAppointments}>
+            <View style={styles.viewHeaderAppointments} >
+                <View>
+
+                <Text style={styles.titleHeader}>Citas Activas</Text>
+                </View>
+            </View>
             {
                 size(appointments) > 0 ?
                 (
@@ -82,18 +94,19 @@ export default function Appointments({navigation}) {
         </View>
     )
 }
-
 const styles = StyleSheet.create({
-    viewBodyAppointments:{
-        flex:1
+    viewAppointments:{
+        flex:1,
+        marginBottom: 60
     },
     btnContainer:{
         position: "absolute",
-        bottom:60,
+        bottom:-30,
         right:15,
         shadowColor: "black",
         shadowOffset: { width: 2, height: 2},
-        shadowOpacity: 0.5
+        shadowOpacity: 0.5,
+
     },
     notFoundView : {
         flex: 1,
@@ -103,5 +116,21 @@ const styles = StyleSheet.create({
     notFoundText : {
         fontSize: 18,
         fontWeight: "bold"
+    },
+    viewHeaderAppointments:{
+        height: 60,
+        width: "100%",
+        backgroundColor: "#047ca4",
+        borderBottomLeftRadius:40,
+        borderBottomRightRadius:40,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    titleHeader:{
+        color: "#FFFFFF",
+        fontWeight: "bold",
+        fontSize:20,
+        
     }
+
 })

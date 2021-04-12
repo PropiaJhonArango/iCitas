@@ -29,7 +29,7 @@ export default function AppointmentsStack() {
                         headerTitleStyle:{
                             color: "#FFFFFF",
                             fontWeight: "bold",
-                            fontSize:25,
+                            fontSize:20,
                         },
                         headerStyle:{
                             backgroundColor: "#047ca4",

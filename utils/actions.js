@@ -2,6 +2,7 @@ import {firebaseApp} from './firebase'
 import * as firebase from 'firebase'
 import { fileToBlob } from './helpers'
 import { LogBox} from 'react-native'
+import { size } from 'lodash'
 
 LogBox.ignoreAllLogs()
 LogBox.ignoreLogs(["Setting a timer"])
@@ -183,7 +184,10 @@ export const getCollectionWithId =  async(collection,id) =>{
 export const getAppointments = async(limitAppointments) => {
     const result = { statusResponse : true, error: null, appointments: [], startAppointment: null}
     try {
-        const response = await db.collection("Appointments").orderBy("createAt", "desc").limit(limitAppointments).get()
+        const response = await db
+                .collection("Appointments")
+                .where("dateAndTime", ">=", new Date())
+                .limit(limitAppointments).get()
         if(response.docs.length > 0){
             result.startAppointment = response.docs[response.docs.length-1]
         }
@@ -195,6 +199,7 @@ export const getAppointments = async(limitAppointments) => {
         result.statusResponse = false
         result.error = error
     }
+
     return result 
 }
 
@@ -203,7 +208,8 @@ export const getMoreAppointments = async(limitAppointments, startAppointment) =>
     try {
         const response = await db
             .collection("Appointments")
-            .orderBy("createAt", "desc")
+            // .orderBy("createAt", "desc")
+            .where("dateAndTime", ">=", new Date())
             .startAfter(startAppointment.data().createAt)
             .limit(limitAppointments)
             .get()
@@ -213,11 +219,36 @@ export const getMoreAppointments = async(limitAppointments, startAppointment) =>
         response.forEach(doc => {
             const appointment = doc.data()
             result.appointments.push(appointment)
+            
         });
     } catch (error) {
         
         result.statusResponse = false
         result.error = error
     }
+
+    return result 
+}
+
+export const getAppointmentsExpired = async() => {
+    const result = { statusResponse : true, error: null, appointments: []}
+    try {
+
+        //const date = firebase.firestore.Timestamp.fromDate(new)
+
+        const response = await db.collection("Appointments").where("dateAndTime", "<", new Date()).get()
+        
+        if(response.docs.length > 0){
+        //     result.startAppointment = response.docs[response.docs.length-1]
+        }
+        response.forEach(doc => {
+             const appointment = doc.data()
+             result.appointments.push(appointment)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    console.log(size(result.appointments))
     return result 
 }

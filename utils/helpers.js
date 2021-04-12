@@ -2,7 +2,7 @@ import { Alert, ImageEditor } from 'react-native'
 import * as Permissions from 'expo-permissions'
 import * as ImagePicker from 'expo-image-picker'
 import * as Location from 'expo-location'
-import { reject } from 'lodash'
+import { reject, size } from 'lodash'
 
 /*Dictionary of countries with their respective codes*/
 const countryList =
@@ -1282,4 +1282,13 @@ export const getCurrentLocation = async() =>{
     response.status = true
     response.location = location
     return response
+}
+
+export const formatDate = (date) => {
+    if (size(date) < 10)
+    {
+        return 
+    }
+    const result = date.substr(0,10).replace("-","").replace("-","")
+    return result
 }

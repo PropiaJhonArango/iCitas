@@ -4,7 +4,7 @@ import { Avatar, Button, Icon, Input } from 'react-native-elements'
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import moment from 'moment'
 import MultiSelect from 'react-native-multiple-select';
-import { filter, isEmpty, map, size } from 'lodash'
+import { filter, isDate, isEmpty, map, size } from 'lodash'
 import uuid from 'random-uuid-v4'
 import MapView from 'react-native-maps'
 
@@ -72,6 +72,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
     const addAppointment = async()=>{
 
         
+        
         if(!validateForm()){
             return
         }
@@ -133,11 +134,12 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
     const validateForm =() =>{
         let isValidForm = true
 
+        
         if(isEmpty(formData.name)){
             setErrorName("Ingresa por favor un nombre para la cita.")
             isValidForm= false
         }
-        if(isEmpty(formData.dateAndTime)){
+        if(!isDate(formData.dateAndTime)){
             setErrorDateAndTime("Ingresa por favor una fecha para la cita.")
             isValidForm= false
         }
@@ -347,7 +349,8 @@ function InputCalendarForm({formData,setFormData,errorDateAndTime}){
       const handleConfirm = (datetime) => {
         hideDatePicker();
         setDateSelected(moment(datetime).format('YYYY-MM-DD hh:mm A'))
-        setFormData({...formData,"dateAndTime" : moment(datetime).format('YYYY-MM-DD hh:mm A')})
+        console.log(datetime)
+        setFormData({...formData,"dateAndTime" : datetime})
       };
 
     return(
