@@ -45,13 +45,11 @@ export default function Appointments({navigation}) {
             return
         }
 
-        // setLoading(true)
         const response = await getMoreAppointments(limitAppointments, startAppointment)
         if(response.statusResponse){
             setStartAppointment(response.startAppointment)
             setAppointments([...appointments, ...response.appointments])
         }
-        // setLoading(false)
     }
 
 
@@ -99,24 +97,6 @@ const styles = StyleSheet.create({
         flex:1,
         marginBottom: 60
     },
-    btnContainer:{
-        position: "absolute",
-        bottom:-30,
-        right:15,
-        shadowColor: "black",
-        shadowOffset: { width: 2, height: 2},
-        shadowOpacity: 0.5,
-
-    },
-    notFoundView : {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    notFoundText : {
-        fontSize: 18,
-        fontWeight: "bold"
-    },
     viewHeaderAppointments:{
         height: 60,
         width: "100%",
@@ -131,6 +111,23 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize:20,
         
-    }
+    },
+    btnContainer:{
+        position: "absolute",
+        bottom:-30,
+        right:15,
+        shadowColor: "black",
+        shadowOffset: { width: 2, height: 2},
+        shadowOpacity: 0.5,
+    },
+    notFoundView : {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    notFoundText : {
+        fontSize: 18,
+        fontWeight: "bold"
+    },
 
 })

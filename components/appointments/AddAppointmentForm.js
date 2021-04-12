@@ -115,9 +115,9 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
         const imagesUrl = []
         await Promise.all( 
             map(imagesSelected, async(image) =>{
-                const response = await uploadImage(image, "appointmentsImages",uuid()) //Para invocar un id unico que no se repita
+                const response = await uploadImage(image, "appointmentsImages",uuid()) 
                 if(response.statusResponse){
-                    imagesUrl.push(response.url) // Para subir la url a el array
+                    imagesUrl.push(response.url) 
                 }
             })
 
@@ -349,7 +349,6 @@ function InputCalendarForm({formData,setFormData,errorDateAndTime}){
       const handleConfirm = (datetime) => {
         hideDatePicker();
         setDateSelected(moment(datetime).format('YYYY-MM-DD hh:mm A'))
-        console.log(datetime)
         setFormData({...formData,"dateAndTime" : datetime})
       };
 

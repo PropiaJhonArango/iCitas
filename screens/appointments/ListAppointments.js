@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { StyleSheet, Text, View,ActivityIndicator } from 'react-native'
 import { Badge, Icon, Image } from 'react-native-elements'
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler'

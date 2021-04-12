@@ -39,13 +39,11 @@ export default function HistoryAppointments({navigation}) {
             return
         }
 
-        // setLoading(true)
         const response = await getMoreAppointmentsExpired(limitAppointments, startAppointment)
         if(response.statusResponse){
             setStartAppointment(response.startAppointment)
             setAppointments([...appointments, ...response.appointments])
         }
-        // setLoading(false)
     }
 
     

@@ -39,7 +39,7 @@ export default function AppointmentsStack() {
                         },
                         headerTintColor: "#FFFFFF",
                         headerTitleAlign:"center",
-                        }}  
+                }}  
                         
            />
 
