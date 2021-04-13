@@ -48,49 +48,6 @@ function SocialGroupMember({socialMember}){
                     <Text style={styles.socialInformation}>+{callingCode+" "+phoneNumber}</Text>
                 </View>
 
-
-                {/* <View style={styles.viewTagsContainer}>
-                    <View style={styles.viewTags}>
-
-                        <Badge 
-                            value={
-                                <View style={styles.viewTagsElements}>
-                                    <Icon 
-                                        type="font-awesome"
-                                        name="star"
-                                        size={17}
-                                        iconStyle={styles.iconStyleTags}
-                                    />
-                                    <Text style={styles.textStyleTags}>Etiqueta 1</Text>
-                                </View>
-                            }
-                            badgeStyle={[styles.badge,{
-                                backgroundColor: "#22af1b",
-                            }]}
-                            
-                        />
-                    </View>
-                    <View style={styles.viewTags}>
-                        <Badge 
-                            value={
-                                <View style={styles.viewTagsElements}>
-                                    <Icon 
-                                        type="font-awesome"
-                                        name="star"
-                                        size={17}
-                                        iconStyle={styles.iconStyleTags}
-                                    />
-                                    <Text style={styles.textStyleTags}>Etiqueta 2</Text>
-                                </View>
-                            }
-                            badgeStyle={[styles.badge,{
-                                backgroundColor: "#f4544c",
-                            }]}
-                            
-                        />
-                    </View>
-
-                </View> */}
             </View>
         </TouchableOpacity>
     )
@@ -101,7 +58,7 @@ function SocialGroupMember({socialMember}){
 const styles = StyleSheet.create({
     viewSocial: {
         flexDirection: "row",
-        margin: 10
+        margin: 10,
     },
     viewSocialImage: {
         marginRight: 10

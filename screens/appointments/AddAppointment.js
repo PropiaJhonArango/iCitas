@@ -14,7 +14,7 @@ export default function AddAppointment({navigation}) {
     return (
         <KeyboardAwareScrollView style={styles.container}>
             <AddAppointmentForm setLoading={setLoading} toasRef={toasRef} navigation={navigation}/>
-            <Loading isVisible={loading} text="Registrando Cita." />
+            <Loading isVisible={loading} text="Cargando..." />
             <Toast ref={toasRef} position= "bottom" opacity={0.9}  />
         </KeyboardAwareScrollView>
     )

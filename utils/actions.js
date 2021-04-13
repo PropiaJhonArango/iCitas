@@ -331,3 +331,22 @@ export const getMoreSocialGroup = async(limitSocialGroup,idCurrentUser,startSoci
     }
     return result 
 }
+
+export const getAllSocialGroup = async(idCurrentUser) => {
+    const result = { statusResponse : true, error: null, socialGroup: []}
+    try {
+        const response = await db
+                .collection("SocialGroup")
+                .where("idMainUser", "==", idCurrentUser)
+                .get()
+
+        response.forEach(doc => {
+            const social = doc.data()
+            result.socialGroup.push(social)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}

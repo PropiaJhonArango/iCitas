@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { StyleSheet, Text, View,ScrollView,TouchableOpacity,LogBox,Alert } from 'react-native'
 import { Avatar, Button, Icon, Input } from 'react-native-elements'
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
@@ -7,10 +7,11 @@ import MultiSelect from 'react-native-multiple-select';
 import { filter, isDate, isEmpty, map, size } from 'lodash'
 import uuid from 'random-uuid-v4'
 import MapView from 'react-native-maps'
+import { useFocusEffect } from '@react-navigation/native'
 
 
 
-import { addDocumentWithoutId, getCurrentUser, uploadImage} from '../../utils/actions'
+import { addDocumentWithoutId, getAllSocialGroup, getCurrentUser, uploadImage} from '../../utils/actions'
 import { getCurrentLocation, loadImageFromGalleryWithoutEditing } from '../../utils/helpers'
 import Modal from '../Modal'
 
@@ -29,6 +30,33 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
     const [userData, setUserData] = useState(getCurrentUser())
     const [visibleMap, setVisibleMap] = useState(false)
     const [locationAppointment, setLocationAppointment] = useState(null)
+    const [memberPatients, setmemberPatients] = useState([])
+
+
+
+    useFocusEffect(
+        useCallback(() => {
+            async function getData() {
+                setLoading(true)
+                const response = await getAllSocialGroup(userData.uid)
+
+                const dataCurrentUser={
+                    id: userData.uid,
+                    name : "Yo ("+userData.displayName+")"
+                }
+                if (response.statusResponse) {
+                   
+                    const dataResult = response.socialGroup.map(doc => ({id:doc.idMemberUser, name: doc.nameMember}))
+                    dataResult.sort((a,b) => a.name.localeCompare(b.name))
+                    setmemberPatients([dataCurrentUser,...dataResult])
+                }
+                
+                setLoading(false)
+            }
+            getData()
+        }, [])
+        
+    )
 
     const onChange =(e,type) =>{
         setFormData({...formData,[type] : e.nativeEvent.text})
@@ -127,7 +155,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
     }
 
     const getNamePatientById =(idPatient)=>{
-        const name = itemsPatients.filter(patient => patient.id ===idPatient)
+        const name = memberPatients.filter(patient => patient.id ===idPatient)
         const namePatient = name.map(patient => patient.name)[0]
         return namePatient
     }
@@ -194,7 +222,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
 
             {/*Input  patient*/}
             <InputMultiSelect 
-                items={itemsPatients}
+                items={memberPatients}
                 setSelectedItem ={setSelectedPatient}
                 selectedItems = {selectedPatient}
                 formData={formData}
@@ -300,6 +328,16 @@ const defaultFormValues =() =>{
         idTags: ""
     }
 }
+
+const defaultFormValuesMultiSelect =(userData) =>{
+    return [
+    {
+        id: userData.uid,
+        name: userData.displayName
+    }
+]
+}
+
 
 
 function FormAddInput (
