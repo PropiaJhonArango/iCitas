@@ -184,12 +184,12 @@ const styles = StyleSheet.create({
     },
     header:{
         flex:1,
-        justifyContent: "flex-end",
+        justifyContent: "flex-start",
         paddingHorizontal: 20,
-        paddingBottom: 50
+        marginTop:50
     },
     footer:{
-        flex:2,
+        flex:4,
         backgroundColor: "#FFFFFF",
         borderTopLeftRadius:30,
         borderTopRightRadius:30,

@@ -271,6 +271,7 @@ export const getMoreAppointmentsExpired = async(limitAppointments, startAppointm
         if(response.docs.length > 0){
             result.startAppointment = response.docs[response.docs.length-1]
         }
+        
         response.forEach(doc => {
             const appointment = doc.data()
             result.appointments.push(appointment)

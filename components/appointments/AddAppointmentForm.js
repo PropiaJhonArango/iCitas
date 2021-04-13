@@ -80,6 +80,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
         setLoading(true)
         
         let resultUploadImage =[]
+        
         if(size(imagesSelected)>0){
              resultUploadImage = await uploadImages()
         }

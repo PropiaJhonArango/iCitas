@@ -2,10 +2,14 @@ import React, { useState } from 'react'
 import { StyleSheet, Text, View,ScrollView,TouchableOpacity,LogBox,Alert } from 'react-native'
 import { Icon, Image, Input } from 'react-native-elements'
 import CountryPicker from 'react-native-country-picker-modal'
+import uuid from 'random-uuid-v4'
+import { isEmpty, map, size } from 'lodash'
+
 
 import { getCountryCode, loadImageFromGallery } from '../../utils/helpers'
+import { addDocumentWithoutId, getCurrentUser, uploadImage } from '../../utils/actions'
 
-export default function AddSocialForm(setLoading, toasRef, navigation) {
+export default function AddSocialForm({setLoading, toasRef, navigation}) {
     const [formData, setFormData] = useState(defaultFormValues())
     const [name, setName] = useState(null)
     const [phone, setPhone] = useState(null)
@@ -14,11 +18,100 @@ export default function AddSocialForm(setLoading, toasRef, navigation) {
 
     const [errorName, setErrorName] = useState(null)
     const [errorNumberIdentify, setErrorNumberIdentify] = useState(null)
+    const [errorPhone, setErrorPhone] = useState(null)
+
 
     const onChange =(e,type) =>{
         setFormData({...formData,[type] : e.nativeEvent.text})
     }
+   
+    
+    const addSocialMember = async()=>{
 
+        if(!validateForm()){
+            return
+        }
+        
+        setLoading(true)
+
+        let resultUploadImage 
+        if(size(imageProfile)>0){
+
+    
+            resultUploadImage = await uploadImage(imageProfile,"socialGroupImages",uuid())
+
+            
+            if(!resultUploadImage.statusResponse){
+                setLoading(false)
+                Alert.alert("Ha ocurrido un error al almacenar la foto de perfil.")
+            }
+        }
+
+        const memberData={
+            nameMember: formData.name,
+            numberIdentifyMember: formData.numberIdentify,
+            phoneNumber: formData.phoneNumber,
+            callingCode: formData.callingCode,
+            idPrincipalUser: getCurrentUser().uid,
+            images :  size(imageProfile)>0 && resultUploadImage.url ,
+            idMemberUser:  uuid(),
+            createdDate: new Date(),
+        }
+
+        const responseAdd = await addDocumentWithoutId("SocialGroup",memberData)
+        setLoading(false)
+
+        if(!responseAdd.statusResponse){
+            toasRef.current.show("Error al guardar el integrante.",3000)
+            return
+        }
+
+        navigation.navigate("social")
+
+
+    }
+
+    const uploadImages =async()=>{
+        const imagesUrl = []
+
+
+        await Promise.all( 
+            map(imageProfile, async(image) =>{
+                const response = await uploadImage(image, "socialGroupImages",uuid()) 
+                if(response.statusResponse){
+                    imagesUrl.push(response.url) 
+                }
+            })
+
+        ) 
+        return imagesUrl
+    }
+
+
+    const validateForm =() =>{
+        let isValid = true
+        setErrorNumberIdentify(null)
+        setErrorName(null)
+        setErrorPhone(null)
+        
+
+        if(isEmpty(formData.name)){
+            setErrorName("Debes ingresar nombres y apellidos.")
+            isValid= false
+        }
+
+        if(isEmpty(formData.numberIdentify)){
+            setErrorNumberIdentify("Debes ingresar numero de identificación.")
+            isValid= false
+        }
+
+        if(isEmpty(formData.phoneNumber)){
+            setErrorPhone("Debes ingresar numero de telefono")
+            isValid= false
+        }
+        
+        return isValid
+    }
     return (
         <ScrollView style={styles.viewContainer}>
 
@@ -32,9 +125,10 @@ export default function AddSocialForm(setLoading, toasRef, navigation) {
                 iconName="user"
                 isMultiline={false}
                 valueField={formData.name}
+                keyboardTypeInput="default"
             />
 
-             {/* Input name */}
+             {/* Input numberIdentify */}
              <FormAddInput
                 placeholderInput="Documento identidad..."
                 labelInput="Nro.Identidad"
@@ -44,20 +138,21 @@ export default function AddSocialForm(setLoading, toasRef, navigation) {
                 iconName="id-badge"
                 isMultiline={false}
                 valueField={formData.numberIdentify}
+                keyboardTypeInput="number-pad"
             />
 
             <InputPhone 
-                onChange={onChange}
+                formData={formData}
+                errorPhone={errorPhone}
             />
             <InputImage 
                 setImageProfile={setImageProfile}
-                imageProfile={imageProfile}
             />
 
             <View style={styles.viewBodyButton}>
                  <TouchableOpacity 
                     style={styles.btnSave}
-                    // onPress={addAppointment}
+                    onPress={addSocialMember}
                 >
                     <Text style={styles.textSave}>
                         Guardar Integrante
@@ -78,7 +173,8 @@ const defaultFormValues =() =>{
     return {
         name:"",
         numberIdentify: "",
-        phone:""
+        phoneNumber:"",
+        callingCode: "57"
     }
 }
 
@@ -92,7 +188,8 @@ function FormAddInput (
         keyError,
         iconName,
         isMultiline,
-        valueField
+        valueField,
+        keyboardTypeInput
     }
     ){
     return(
@@ -103,6 +200,7 @@ function FormAddInput (
                     onChange ={(e) =>   onChange(e, keyItemFormData) }
                     errorMessage= {keyError}
                     multiline={isMultiline}
+                    keyboardType={keyboardTypeInput}
                     rightIcon={{
                         type:"font-awesome",
                         name :iconName,
@@ -114,51 +212,16 @@ function FormAddInput (
 }
 
 
-function InputPhone({onChange}){
+function InputPhone({formData,errorPhone}){
 
     const [callingCode, setCallingCode] = useState("57")
     const [phone, setPhone] = useState(null) 
 
     const [country, setCountry] = useState(getCountryCode(callingCode))
 
-    const [errorPhone, setErrorPhone] = useState(null)
-    const [loading, setLoading] = useState(false)
-
-
-    // const onSubmit = async() =>{
-    //     if(!validateForm()){
-    //         return
-    //     }
-
-    //     const userData ={
-    //         callingCode : callingCode,
-    //         phoneNumber: phone
-    //     }
-        
-    //     setLoading(true)
-    //     const resultCollection = await updateDocument("Users",uidUser,userData)
-    //     if(!resultCollection.statusResponse){
-    //         setErrorPhone("Error al actualizar el numero.")
-    //         setLoading(false)
-    //         return
-    //     }
-    //     setLoading(false)
-
-    //     setReloadInfoExternal(true)
-    //     setShowModalInfo(false)
-        
-    // }
-
-    const validateForm = () =>{
-        setErrorPhone(null)
-        let isValid = true
-
-        if(size(phone)<10){
-            setErrorPhone("Debes ingresar un numero valido")
-            isValid = false
-        }
-
-        return isValid
+    const onChageInternal =(e)=>{
+        setPhone(e.nativeEvent.text)
+        formData.phoneNumber= e.nativeEvent.text
     }
 
     return(
@@ -180,6 +243,7 @@ function InputPhone({onChange}){
                         onSelect= {(country) =>{
                             setCountry(country.cca2)
                             setCallingCode(country.callingCode[0])
+                            formData.callingCode= country.callingCode[0]
                         }}
                     />
                 </View>
@@ -189,7 +253,7 @@ function InputPhone({onChange}){
                     defaultValue={phone}
                     keyboardType="phone-pad"
                     containerStyle={styles.inputPhone}
-                    onChange={(e) => setPhone(e.nativeEvent.text)}
+                    onChange={(e) => onChageInternal(e)}
                     errorMessage={errorPhone}
                     rightIcon={{
                         type:"font-awesome",
@@ -205,7 +269,7 @@ function InputPhone({onChange}){
         
 }
 
-function InputImage ({setImageProfile,imageProfile}){
+function InputImage ({setImageProfile}){
 
     const [photoUrl, setPhotoUrl] = useState() 
 
@@ -220,26 +284,7 @@ function InputImage ({setImageProfile,imageProfile}){
         setPhotoUrl(resultImageSelected.image)
         setImageProfile(resultImageSelected.image)
  
-        // const resultUploadImage = await uploadImage(resultImageSelected.image,"avatars",user.uid)
 
-
-        // if(!resultUploadImage.statusResponse){
-        //     setLoading(false)
-        //     Alert.alert("Ha ocurrido un error al almacenar la foto de perfil.")
-        //     return
-        // }
-
-        // const resultUpdateProfile = await updateProfile({photoURL: resultUploadImage.url})
-
-        // await updateDocument("Users",user.uid,{photoURL: resultUploadImage.url})
-
-        // setLoading(false)
-        // if(resultUpdateProfile.statusResponse){
-        //     setPhotoUrl(resultUploadImage.url)
-            
-        // }else{
-        //     Alert.alert("Ha ocurrido un error al actualizar la foto de perfil.")
-        // }
         
     }
 
@@ -282,10 +327,10 @@ const styles = StyleSheet.create({
     viewBody:{
         width: "90%",
         alignSelf:"center",
-        maxHeight: "100%"
+        maxHeight: "100%",
+        marginBottom:1
     },
     icon:{
-        // color: "#c1c1c1",
         marginRight:10
     },
     viewInput:{
