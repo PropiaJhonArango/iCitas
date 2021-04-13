@@ -52,7 +52,7 @@ export default function AddSocialForm({setLoading, toasRef, navigation}) {
             numberIdentifyMember: formData.numberIdentify,
             phoneNumber: formData.phoneNumber,
             callingCode: formData.callingCode,
-            idPrincipalUser: getCurrentUser().uid,
+            idMainUser: getCurrentUser().uid,
             images :  size(imageProfile)>0 && resultUploadImage.url ,
             idMemberUser:  uuid(),
             createdDate: new Date(),

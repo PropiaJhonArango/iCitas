@@ -282,3 +282,52 @@ export const getMoreAppointmentsExpired = async(limitAppointments, startAppointm
     }
     return result 
 }
+
+export const getSocialGroup = async(limitSocialGroup,idCurrentUser) => {
+    const result = { statusResponse : true, error: null, socialGroup: [], startSocialGroup: null}
+    try {
+        const response = await db
+                .collection("SocialGroup")
+                .where("idMainUser", "==", idCurrentUser)
+                .limit(limitSocialGroup)
+                .get()
+        if(response.docs.length > 0){
+            result.startSocialGroup = response.docs[response.docs.length-1]
+        }
+        response.forEach(doc => {
+            const social = doc.data()
+            result.socialGroup.push(social)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}
+
+export const getMoreSocialGroup = async(limitSocialGroup,idCurrentUser,startSocialGroup) => {
+    const result = { statusResponse : true, error: null, socialGroup: [], startSocialGroup: null}
+    try {
+
+        const response = await db
+        .collection("SocialGroup")
+        .orderBy("createdDate", "desc")
+        .where("idMainUser", "==", idCurrentUser)
+        .startAfter(startSocialGroup.data().idMainUser)
+        .limit(limitSocialGroup)
+        .get()
+        
+        if(response.docs.length > 0){
+            result.startSocialGroup = response.docs[response.docs.length-1]
+        }
+        
+        response.forEach(doc => {
+            const social = doc.data()
+            result.socialGroup.push(social)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}
