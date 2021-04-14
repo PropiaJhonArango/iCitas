@@ -3,7 +3,7 @@ import { TouchableOpacity } from 'react-native'
 import { StyleSheet, Text, View } from 'react-native'
 import { Icon } from 'react-native-elements'
 
-export default function SettingsAccount() {
+export default function SettingsAccount({navigation}) {
 
     return (
         <View style={styles.viewSettings}>
@@ -17,7 +17,9 @@ export default function SettingsAccount() {
                     Configura a tu gusto las diversas caracteristicas de iCitas
                 </Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity
+                onPress={() => navigation.navigate("tags")}
+            >
                 <View style={styles.viewFooterSettings}>
                     <View style={styles.viewFooterOptions}>
                         <Icon
