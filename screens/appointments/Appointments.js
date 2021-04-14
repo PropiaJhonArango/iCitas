@@ -33,9 +33,7 @@ export default function Appointments({navigation}) {
                 setLoading(false)
             }
             getData()
-            
         }, [])
-        
     )
 
     

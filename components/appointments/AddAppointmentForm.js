@@ -63,20 +63,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
         setFormData({...formData,[type] : e.nativeEvent.text})
     }
 
-    const itemsPatients = [
-        {
-        id: '92iijs7yta',
-        name: "Yo ("+userData.displayName+")"
-    }, 
-      {
-        id: 'a0s0a8ssbsd',
-        name: 'Madre'
-      }, 
-      {
-        id: '16hbajsabsd',
-        name: 'Padre'
-      }
-    ]
+ 
 
     const itemsTags = [
         {

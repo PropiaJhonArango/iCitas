@@ -12,11 +12,13 @@ export default function AddTags({navigation}) {
     const toasRef = useRef()
     const [loading, setLoading] = useState(false)
 
+    
+
     return (
         <KeyboardAwareScrollView style={styles.container}>
             <AddTagsForm setLoading={setLoading} toasRef={toasRef} navigation={navigation}/>
             <Loading isVisible={loading} text="Cargando..." />
-            <Toast ref={toasRef} position= "bottom" opacity={0.9}  />
+            <Toast ref={toasRef} position= "center" opacity={0.9}  />
         </KeyboardAwareScrollView>
     )
 }

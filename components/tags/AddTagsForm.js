@@ -1,26 +1,66 @@
+import { isEmpty } from 'lodash'
 import React, { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { Icon, Input } from 'react-native-elements'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 
+import { addDocumentWithoutId, getCurrentUser } from '../../utils/actions'
+
 
 export default function AddTagsForm({setLoading, toasRef,navigation}) {
-    const [colorSelected, setColorSelected] = useState(defaultFormValues())
+    const [dataSelected, setDataSelected] = useState(defaultFormValues())
+    const [errorName, setErrorName] = useState(null)
 
     const backgroundColors =["#f4544c","#067da4","#22af1b","#f87c44"]
 
-    // const formData ={
-    //     name: "",
-    //     color: ""
-    // }
-console.log(colorSelected)
+    const addTag = async()=>{
+        if(!validateForm()){
+            return
+        }
+
+        setLoading(true)
+
+        const tagInfo ={
+            tagName: dataSelected.name,
+            tagColor: dataSelected.color,
+            ownerId: getCurrentUser().uid,
+            createdDate: new Date()
+        }
+
+        const responseAddAppointment = await addDocumentWithoutId("UserTags",tagInfo)
+        setLoading(false)
+
+        if(!responseAddAppointment.statusResponse){
+            toasRef.current.show("Error al guardar la etiqueta, intente nuevamente.",3000)
+            return
+        }
+        navigation.navigate("tags")
+
+    }
+
+    const validateForm =() =>{
+        let isValidForm = true
+
+        if(isEmpty(dataSelected.name)){
+            setErrorName("Ingresa por favor un nombre para la etiqueta")
+            isValidForm= false
+        }
+      
+        if(isEmpty(dataSelected.color)){
+            setErrorName("Selecciona un color para la etiqueta")
+            isValidForm= false
+        }
+        return isValidForm
+
+    }
+    
+
 
     const onChange =(e,type) =>{
         if(type !=="color"){
-
-            setColorSelected({...colorSelected,[type] : e.nativeEvent.text})
+            setDataSelected({...dataSelected,[type] : e.nativeEvent.text})
         }else{
-            setColorSelected({...colorSelected,[type] : e})
+            setDataSelected({...dataSelected,[type] : e})
         }
     }
 
@@ -30,40 +70,58 @@ console.log(colorSelected)
     return (
         <View style={styles.viewSettings}>
 
-                    <View style={styles.viewFooterSettings}>
-                        <View style={styles.viewFooterOptions}>
-                            <Icon
-                                type="font-awesome"
-                                name="tags"
-                                color={colorSelected.color}
-                                size={120}
-                            />
-                           
-                            <View style={styles.ViewFooterText}>
-                                <Input 
-                                    placeholder="Nombre Etiqueta..."
-                                    onChange={(e) => onChange(e,"name")}
-                                    label="Nombre Etiqueta"
-                                />
+            <View style={styles.viewFooterSettings}>
+                <View style={styles.viewFooterOptions}>
+                    <Icon
+                        type="font-awesome"
+                        name="tags"
+                        color={dataSelected.color}
+                        size={120}
+                    />
+                    
+                    <View style={styles.ViewFooterText}>
+                        <Input 
+                            placeholder="Nombre Etiqueta..."
+                            onChange={(e) => onChange(e,"name")}
+                            label="Nombre Etiqueta"
+                            errorMessage={errorName}
+                            rightIcon={{
+                                type:"font-awesome",
+                                name :"tag",
+                                color: isEmpty(dataSelected.name) ? "#c2c2c2":"#22af1b"
+                            }}
+                            
+                        />
 
-                                <View style={styles.viewColors}>
-                                    <Text style={styles.textColor}>Color: </Text>
-                                    {
-                                        backgroundColors.map((color) =>(
-                                            <TouchableOpacity 
-                                                key={color}
-                                                style={[styles.colorSelect,
-                                                {backgroundColor: color}]}
-                                                onPress={() => onChange(color,"color") }
-                                            />
-                                        ))
-                                       
-                                    }
-                                </View>
-
-                            </View>
+                        <View style={styles.viewColors}>
+                            <Text style={styles.textColor}>Color: </Text>
+                            {
+                                backgroundColors.map((color) =>(
+                                    <TouchableOpacity 
+                                        key={color}
+                                        style={[styles.colorSelect,
+                                            {backgroundColor: color}
+                                        ]}
+                                        onPress={() => onChange(color,"color") }
+                                    />
+                                ))
+                                
+                            }
                         </View>
+
                     </View>
+                </View>
+            </View>
+            <View style={styles.viewBody}>
+                 <TouchableOpacity 
+                    style={styles.btnSave}
+                    onPress={addTag}
+                >
+                    <Text style={styles.textSave}>
+                        Guardar Etiqueta
+                    </Text>
+                </TouchableOpacity>
+            </View>
 
             
           
@@ -83,17 +141,18 @@ const defaultFormValues =() =>{
 const styles = StyleSheet.create({
     viewSettings:{
         flex:1,
-        marginBottom: 60,
         alignItems: "center",
+        justifyContent:"center"
    
     },
     viewFooterSettings:{
-        justifyContent: "center",
         alignItems:"center",
-        marginTop: 50
+        marginTop: 20
     },
     viewFooterOptions:{
-        flexDirection: "row"
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent:"center"
     },
     ViewFooterText:{
         justifyContent: "center",
@@ -123,5 +182,26 @@ const styles = StyleSheet.create({
     textColor:{
         fontSize: 16,
         fontWeight:"bold"
-    }
+    },
+    btnSave:{
+        width:"90%",
+        height: 40,
+        justifyContent: "center",
+        alignItems:"center",
+        alignSelf:"center",
+        borderRadius: 10,
+        backgroundColor: "#047ca4",
+        marginBottom:10
+    },
+    textSave:{
+        color: "#FFFFFF",
+        fontWeight: "bold"
+    },
+    viewBody:{
+        width: "90%",
+        alignSelf:"center",
+        maxHeight: "100%",
+        marginTop:20
+
+    },
 })

@@ -300,6 +300,7 @@ export const getSocialGroup = async(limitSocialGroup,idCurrentUser) => {
         }
         response.forEach(doc => {
             const social = doc.data()
+            social.id = doc.id
             result.socialGroup.push(social)
         });
     } catch (error) {
@@ -327,6 +328,7 @@ export const getMoreSocialGroup = async(limitSocialGroup,idCurrentUser,startSoci
         
         response.forEach(doc => {
             const social = doc.data()
+            social.id = doc.id
             result.socialGroup.push(social)
         });
     } catch (error) {
@@ -346,7 +348,79 @@ export const getAllSocialGroup = async(idCurrentUser) => {
 
         response.forEach(doc => {
             const social = doc.data()
+            social.id = doc.id
             result.socialGroup.push(social)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}
+
+export const getTags = async(limitTags,idCurrentUser) => {
+    const result = { statusResponse : true, error: null, tags: [], startTags: null}
+    try {
+        const response = await db
+                .collection("UserTags")
+                .where("ownerId", "==", idCurrentUser)
+                .limit(limitTags)
+                .get()
+        if(response.docs.length > 0){
+            result.startTags = response.docs[response.docs.length-1]
+        }
+        response.forEach(doc => {
+            const tag = doc.data()
+            tag.id = doc.id
+            result.tags.push(tag)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}
+
+export const getMoreTags = async(limitTags,idCurrentUser,startTags) => {
+    const result = { statusResponse : true, error: null, tags: [], startTags: null}
+    try {
+
+        const response = await db
+        .collection("UserTags")
+        .orderBy("createdDate", "desc")
+        .where("ownerId", "==", idCurrentUser)
+        .startAfter(startTags.data().ownerId)
+        .limit(limitTags)
+        .get()
+        
+        if(response.docs.length > 0){
+            result.startTags = response.docs[response.docs.length-1]
+        }
+        
+        response.forEach(doc => {
+            const tag = doc.data()
+            tag.id = doc.id
+            result.tags.push(tag)
+        });
+    } catch (error) {
+        result.statusResponse = false
+        result.error = error
+    }
+    return result 
+}
+
+export const getAllTags = async(idCurrentUser) => {
+    const result = { statusResponse : true, error: null, tags: []}
+    try {
+        const response = await db
+                .collection("UserTags")
+                .where("ownerId", "==", idCurrentUser)
+                .get()
+
+        response.forEach(doc => {
+            const tag = doc.data()
+            tag.id = doc.id
+            result.tags.push(tag)
         });
     } catch (error) {
         result.statusResponse = false
