@@ -194,6 +194,7 @@ export const getAppointments = async(limitAppointments) => {
         }
         response.forEach(doc => {
             const appointment = doc.data()
+            appointment.id = doc.id
             result.appointments.push(appointment)
         });
     } catch (error) {
@@ -219,6 +220,7 @@ export const getMoreAppointments = async(limitAppointments, startAppointment) =>
         }
         response.forEach(doc => {
             const appointment = doc.data()
+            appointment.id = doc.id
             result.appointments.push(appointment)
             
         });
@@ -247,6 +249,7 @@ export const getAppointmentsExpired = async(limitAppointments) => {
         }
         response.forEach(doc => {
             const appointment = doc.data()
+            appointment.id = doc.id
             result.appointments.push(appointment)
         });
     } catch (error) {
@@ -274,6 +277,7 @@ export const getMoreAppointmentsExpired = async(limitAppointments, startAppointm
         
         response.forEach(doc => {
             const appointment = doc.data()
+            appointment.id = doc.id
             result.appointments.push(appointment)
         });
     } catch (error) {

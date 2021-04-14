@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { StyleSheet, Text, View,ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View,ActivityIndicator,TouchableOpacity,FlatList } from 'react-native'
 import { Badge, Icon, Image } from 'react-native-elements'
-import { FlatList, TouchableOpacity } from 'react-native-gesture-handler'
 import { size } from 'lodash'
 import moment from 'moment'
 

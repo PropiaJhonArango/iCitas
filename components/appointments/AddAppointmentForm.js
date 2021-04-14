@@ -47,6 +47,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
                 if (response.statusResponse) {
                    
                     const dataResult = response.socialGroup.map(doc => ({id:doc.idMemberUser, name: doc.nameMember}))
+                    /*I sort the array of objects by member name */
                     dataResult.sort((a,b) => a.name.localeCompare(b.name))
                     setmemberPatients([dataCurrentUser,...dataResult])
                 }
