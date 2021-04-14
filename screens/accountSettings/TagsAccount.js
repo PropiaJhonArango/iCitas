@@ -25,7 +25,6 @@ export default function TagsAccount({navigation}) {
                     setStartTags(response.startTags)
                     setTags(response.tags)
                 }
-                console.log("Datos: ",response.error)
                 setLoading(false)
             }
             getData()
@@ -90,6 +89,15 @@ const styles = StyleSheet.create({
         shadowColor: "black",
         shadowOffset: { width: 2, height: 2},
         shadowOpacity: 0.5,
+    },
+    notFoundView : {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    notFoundText : {
+        fontSize: 18,
+        fontWeight: "bold"
     },
    
 })

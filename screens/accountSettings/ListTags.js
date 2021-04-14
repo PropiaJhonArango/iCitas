@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     viewTags: {
         flexDirection: "row",
         margin: 10,
-        justifyContent:"center",
+        marginLeft: 30,
         alignContent:"center",
         marginTop:20
     },
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     },
     viewInformation:{
         justifyContent:"center",
-        alignItems:"center"
+        alignItems:"center",
     },
     ViewColor:{
         alignContent:"center",

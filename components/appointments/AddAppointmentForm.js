@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native'
 
 
 
-import { addDocumentWithoutId, getAllSocialGroup, getCurrentUser, uploadImage} from '../../utils/actions'
+import { addDocumentWithoutId, getAllSocialGroup, getAllTags, getCurrentUser, uploadImage} from '../../utils/actions'
 import { getCurrentLocation, loadImageFromGalleryWithoutEditing } from '../../utils/helpers'
 import Modal from '../Modal'
 
@@ -31,7 +31,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
     const [visibleMap, setVisibleMap] = useState(false)
     const [locationAppointment, setLocationAppointment] = useState(null)
     const [memberPatients, setmemberPatients] = useState([])
-
+    const [userTags, setUserTags] = useState([])
 
 
     useFocusEffect(
@@ -44,12 +44,21 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
                     id: userData.uid,
                     name : "Yo ("+userData.displayName+")"
                 }
+
                 if (response.statusResponse) {
                    
                     const dataResult = response.socialGroup.map(doc => ({id:doc.idMemberUser, name: doc.nameMember}))
                     /*I sort the array of objects by member name */
                     dataResult.sort((a,b) => a.name.localeCompare(b.name))
                     setmemberPatients([dataCurrentUser,...dataResult])
+                }
+
+                const responseTags = await getAllTags(userData.uid)
+
+                if(responseTags.statusResponse){
+                    const dataResultTags = responseTags.tags.map(doc => ({id:doc.id, name: doc.tagName}))
+                    dataResultTags.sort((a,b) => a.name.localeCompare(b.name))
+                    setUserTags(dataResultTags)
                 }
                 
                 setLoading(false)
@@ -63,28 +72,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
         setFormData({...formData,[type] : e.nativeEvent.text})
     }
 
- 
 
-    const itemsTags = [
-        {
-        id: "4444",
-        name: "Cardiologo Padre"
-    }, 
-      {
-        id: "555",
-        name: "Reumatologo"
-      }, 
-      {
-        id: "666",
-        name: "Examen"
-      }
-      , 
-      {
-        id: "777",
-        name: "Control"
-      }
-    ]
-    
     const addAppointment = async()=>{
 
         
@@ -237,7 +225,7 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
 
             {/*Input  tags*/}
             <InputMultiSelect 
-                items={itemsTags}
+                items={userTags}
                 setSelectedItem ={setIdTags}
                 selectedItems = {idTags}
                 formData={formData}
@@ -317,14 +305,7 @@ const defaultFormValues =() =>{
     }
 }
 
-const defaultFormValuesMultiSelect =(userData) =>{
-    return [
-    {
-        id: userData.uid,
-        name: userData.displayName
-    }
-]
-}
+
 
 
 
@@ -661,7 +642,6 @@ const styles = StyleSheet.create({
         marginLeft:10 
     },
     icon:{
-        // color: "#c1c1c1",
         marginRight:10
     },
     viewBody:{
