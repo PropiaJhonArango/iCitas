@@ -5,13 +5,13 @@ import moment from 'moment'
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import MultiSelect from 'react-native-multiple-select';
 import { useFocusEffect } from '@react-navigation/native'
-import { filter, isEmpty, map, size } from 'lodash'
+import { filter, isDate, isEmpty, map, size } from 'lodash'
 import Toast from 'react-native-easy-toast'
 import MapView from 'react-native-maps'
 import uuid from 'random-uuid-v4'
 
 import Loading from '../../components/Loading'
-import { getAllSocialGroup, getAllTags, getCurrentUser, uploadImage } from '../../utils/actions'
+import { getAllSocialGroup, getAllTags, getCurrentUser, uploadImage,deleteDocument, updateDocument } from '../../utils/actions'
 import { getCurrentLocation, loadImageFromGalleryWithoutEditing } from '../../utils/helpers'
 import { Alert } from 'react-native'
 import Modal from '../../components/Modal'
@@ -160,7 +160,7 @@ export default function Appointment({navigation,route}) {
             [
                 {
                     text:"No",
-                    style:"cancer"
+                    style:"cancel"
                 },
                 {
                     text:"Si",
@@ -189,14 +189,91 @@ export default function Appointment({navigation,route}) {
         if(size(imagesLocal)>0){
             resultUploadImage = await uploadImages(imagesLocal)
         }
-        const imagesFinal = [...imagesFirebase,...resultUploadImage]
-        
+        const finalImages = [...imagesFirebase,...resultUploadImage]
+
+        formData.images = finalImages
+        formData.location = locationAppointment && locationAppointment 
+        formData.namePatient = getNamePatientById(formData.idPatient)
+
+        if(!validateForm()){
+            return
+        }
+        setLoading(true)
+        const result = await updateDocument("Appointments",id,formData)
+
+        if(!result.statusResponse){
+            toasRef.current.show("Error al modificar la cita. ",3000)
+            setLoading(true)
+            return
+        }
+        setLoading(false)
+        navigation.navigate("appointments")
 
     }
 
+    const validateForm =()=>{
+        let isValidForm=true
+
+        if(isEmpty(formData.name)){
+            setErrorName("Ingresa por favor un nombre para la cita.")
+            isValidForm=false
+        }
+
+        if(isEmpty(formData.dateAndTime)  && !isDate(formData.dateAndTime)){
+            setErrorDateAndTime("Ingresa por favor una fecha para la cita.")
+            isValidForm= false
+        }
+
+        if(isEmpty(formData.address)){
+            setErrorAddress("Ingresa una direccion ó clinica.")
+            isValidForm= false
+        }
+        return isValidForm
+    }
+
+    const getNamePatientById =(idPatient)=>{
+        const name = memberPatients.filter(patient => patient.id ===idPatient)
+        const namePatient = name.map(patient => patient.name)[0]
+        return namePatient
+    }
+
+
+    const askDeleteAppointment = async()=>{
+        Alert.alert(
+            "Eliminar Cita",
+            "¿Estas seguro de eliminar la cita?",
+            [
+                {
+                    text:"No",
+                    style:"cancel"
+                },
+                {
+                    text:"Si",
+                    onPress:() =>{
+                        deleteAppointment()
+                    }
+                }
+            ]
+            ,
+            {
+                cancelable:true
+            }
+        )
+    }
+
+    const deleteAppointment = async()=>{
+        const result = await deleteDocument("Appointments",id)
+
+        if(!result.statusResponse){
+            toasRef.current.show("Error al elimininar la cita. ",3000)
+            return
+        }
+        navigation.navigate("appointments")
+    }
+
+
     const uploadImages =async(newImages)=>{
 
-        
         const imagesUrl = []
         await Promise.all( 
             map(newImages, async(image) =>{
@@ -218,8 +295,11 @@ export default function Appointment({navigation,route}) {
             <Loading isVisible={loading}  text="Cargando..."/>
             <Toast ref={toasRef} position= "bottom" opacity={0.9}  />
 
-            {/* Input Name */}
-            <View style={styles.viewBody}>
+            
+            <View style={[styles.viewBody,{
+                    marginTop:15
+            }]}>
+                {/* Input Name */}
                 <Input 
                     placeholder={"Nombre o descripcion de la cita...."}  
                     label="Nombre Cita" 
@@ -232,6 +312,7 @@ export default function Appointment({navigation,route}) {
                         color: formData.name ? "#22af1b" : "#c2c2c2"
                     }}
                 />
+
                 {/* Input Calendar */}
                 <TouchableOpacity onPress={showDatePicker} >
                     <Input 
@@ -272,8 +353,8 @@ export default function Appointment({navigation,route}) {
                     defaultValue={formData.address}
                     rightIcon ={{
                         type:"font-awesome",
-                        name: locationAppointment ? "check-square-o"  : "map-marker",
-                        color: locationAppointment ? "#22af1b": "#c2c2c2",
+                        name: initialData.location ? "check-square-o"  : "map-marker",
+                        color: initialData.location ? "#22af1b": "#c2c2c2",
                         onPress:() => setVisibleMap(true)
                     }}
                 />
@@ -378,8 +459,7 @@ export default function Appointment({navigation,route}) {
                                     color= {size(imagesSelected) > 0 ? "#22af1b": "#7a7a7a"}
                                     containerStyle={styles.containerIcon}
                                     onPress={imageSelect}
-                                    
-                                    
+
                                 />
                                 </TouchableOpacity>
                                 
@@ -422,7 +502,7 @@ export default function Appointment({navigation,route}) {
 
                     <TouchableOpacity 
                     style={styles.btnDelete}
-                    // onPress={addAppointment}
+                    onPress={askDeleteAppointment}
                     >
                         <Text style={styles.textSave}>
                             Eliminar
@@ -445,7 +525,6 @@ function MapAppointment({visibleMap,setVisibleMap,setLocationAppointment,toasRef
     const [newRegionAppointment, setNewRegionAppointment] = useState(null)
 
     useEffect(() => {
-        console.log(isEmpty(initialLocation))
         isEmpty(initialLocation) 
         ?
             (async()=>{
@@ -466,6 +545,7 @@ function MapAppointment({visibleMap,setVisibleMap,setLocationAppointment,toasRef
     const confirmLocation =() =>{
         setLocationAppointment(newRegionAppointment)
         toasRef.current.show("Ubicacion de la clinica guardada correctamente.",3000)
+
         setVisibleMap(false)
     }
 
@@ -627,6 +707,11 @@ const styles = StyleSheet.create({
     mapStyle:{
         width: "100%",
         height: 550
+    },
+    textArea:{
+        height: 100,
+        width: "100%",
+        marginTop:15
     },
 
 })

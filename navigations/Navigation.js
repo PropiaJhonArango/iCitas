@@ -96,8 +96,12 @@ export default function Navigation({setLogged}) {
                     options={{title: "Social"}} 
                 />
  
-                <Tab.Screen name="profile">
+                <Tab.Screen 
+                    name="profile"
+                    options={{title: "Perfil"}} 
+                >
                     {props => <ProfileStack {...props} setLogged={setLogged} />}
+                    
                 </Tab.Screen>
 
             </Tab.Navigator>
