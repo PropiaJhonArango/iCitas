@@ -112,6 +112,7 @@ export default function AddSocialForm({setLoading, toasRef, navigation}) {
         
         return isValid
     }
+    
     return (
         <ScrollView style={styles.viewContainer}>
 
@@ -302,8 +303,6 @@ function InputImage ({setImageProfile}){
                     </View>
                     <Image 
                         source={
-
-                            // require("../../assets/avatar-default.jpg")
                             photoUrl
                             ? {uri: photoUrl}
                             : require("../../assets/avatar-default.jpg")

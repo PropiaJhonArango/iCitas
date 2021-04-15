@@ -203,7 +203,7 @@ export default function Appointment({navigation,route}) {
 
         if(!result.statusResponse){
             toasRef.current.show("Error al modificar la cita. ",3000)
-            setLoading(true)
+            setLoading(false)
             return
         }
         setLoading(false)

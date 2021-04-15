@@ -13,21 +13,25 @@ export default function ListSocialGroup({socialGroup,navigation, handleLoadMore}
                 onEndReachedThreshold={0.5}
                 onEndReached={handleLoadMore}
                 renderItem={(socialMember) => (
-                    <SocialGroupMember socialMember={socialMember} />
+                    <SocialGroupMember socialMember={socialMember} navigation={navigation} />
                 )}
             />
         </View>
     )
 }
 
-function SocialGroupMember({socialMember}){
+function SocialGroupMember({socialMember,navigation}){
     const {id,idMemberUser,nameMember,numberIdentifyMember,phoneNumber,callingCode, images} = socialMember.item
-    // const imageAppointment = size(images)>0 && images[0]
 
+    const goMemberDetails =()=>{
 
+        navigation.navigate("member-details",{socialMember})
+    }
 
     return(
-        <TouchableOpacity>
+        <TouchableOpacity
+            onPress={goMemberDetails}
+        >
             <View style={styles.viewSocial}>
                 <View style={styles.viewSocialImage}>
                         <Image
