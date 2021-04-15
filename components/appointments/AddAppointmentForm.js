@@ -65,7 +65,6 @@ export default function AddAppointmentForm({setLoading, toasRef,navigation}) {
             }
             getData()
         }, [])
-        
     )
 
     const onChange =(e,type) =>{
@@ -446,8 +445,6 @@ function InputMultiSelect(
         }
         /*Convert the selectedItems array to an object*/
         const objectItems = {...selectedItems}
-
-
         setSelectedItem(selectedItems)
         setFormData({...formData, [keyFormData] : objectItems})
     }
@@ -466,8 +463,8 @@ function InputMultiSelect(
                     tagRemoveIconColor="#f4544c"
                     tagBorderColor="#067da4"
                     tagTextColor="#877f7e"
-                    selectedItemTextColor="#CCC"
                     selectedItemIconColor="#CCC"
+                    selectedItemTextColor="#CCC"
                     itemTextColor="#000"
                     searchInputStyle={styles.searchInputMultiSelect}
                     submitButtonColor="#047ca4"

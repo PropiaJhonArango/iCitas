@@ -172,6 +172,7 @@ export const getCollectionWithId =  async(collection,id) =>{
     try {
         const data = await db.collection(collection).doc(id).get()
         const arrayData = data.data()
+        arrayData.id = data.id
         result.statusResponse = true
         result.data = arrayData
     } catch (error) {

@@ -18,21 +18,27 @@ export default function ListAppointments({appointments,navigation, handleLoadMor
                 onEndReachedThreshold={0.5}
                 onEndReached={handleLoadMore}
                 renderItem={(appointment) => (
-                    <Appointment appointment={appointment} />
+                    <Appointment appointment={appointment} navigation={navigation} />
                 )}
             />
         </View>
     )
 }
 
-function Appointment({appointment}){
+function Appointment({appointment,navigation}){
     const {id,namePatient,name,dateAndTime,address, images,idTags} = appointment.item
     const imageAppointment = size(images)>0 && images[0]
     const [userUpdated, setUserUpdated] = useState(getCurrentUser())
 
+    const goAppointment =()=>{
+
+        navigation.navigate("appointment",{appointment})
+    }
 
     return(
-        <TouchableOpacity>
+        <TouchableOpacity
+            onPress={goAppointment}
+        >
             <View style={styles.viewAppointment}>
                 <View style={styles.viewAppointmentImage}>
                         <Image
