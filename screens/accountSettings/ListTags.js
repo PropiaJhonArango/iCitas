@@ -13,19 +13,25 @@ export default function ListTags({tags,navigation, handleLoadMore}) {
                 onEndReachedThreshold={0.5}
                 onEndReached={handleLoadMore}
                 renderItem={(tag) => (
-                    <Tag tag={tag} />
+                    <Tag tag={tag} navigation={navigation} />
                 )}
             />
         </View>
     )
 }
 
-function Tag({tag}){
+function Tag({tag,navigation}){
     const {id,tagName,tagColor} = tag.item
 
+    const goTag =()=>{
+
+        navigation.navigate("tag", {tag})
+    }
 
     return(
-        <TouchableOpacity>
+        <TouchableOpacity
+            onPress={goTag}
+        >
             <View style={styles.viewTags}>
                 <View style={styles.viewTagsIcon}>
                     <Icon
