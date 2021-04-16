@@ -2,7 +2,6 @@ import {firebaseApp} from './firebase'
 import * as firebase from 'firebase'
 import { fileToBlob } from './helpers'
 import { LogBox} from 'react-native'
-import { size } from 'lodash'
 
 LogBox.ignoreAllLogs()
 LogBox.ignoreLogs(["Setting a timer"])

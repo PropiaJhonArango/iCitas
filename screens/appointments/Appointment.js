@@ -591,17 +591,7 @@ function MapAppointment({visibleMap,setVisibleMap,setLocationAppointment,toasRef
     )
 }
 
-const defaultFormValues =() =>{
-    return {
-        name:"",
-        dateAndTime: "",
-        address:"",
-        idPatient:"",
-        notes:"",
-        doctor:"",
-        idTags: ""
-    }
-}
+
 
 const styles = StyleSheet.create({
     viewContainer:{

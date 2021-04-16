@@ -1,18 +1,19 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { StyleSheet, Text, View,ActivityIndicator,TouchableOpacity,FlatList } from 'react-native'
 import { Badge, Icon, Image } from 'react-native-elements'
-import { size } from 'lodash'
+import { map, size } from 'lodash'
 import moment from 'moment'
+import { useFocusEffect } from '@react-navigation/native'
 
-import { getCurrentUser } from '../../utils/actions'
+import { getAllTags, getCurrentUser } from '../../utils/actions'
 
 
 export default function ListAppointments({appointments,navigation, handleLoadMore}) {
-    
+
 
     return (
         <View>
-            <FlatList 
+            <FlatList
                 data={appointments}
                 keyExtractor={(item,index) => index.toString()}
                 onEndReachedThreshold={0.5}
@@ -26,12 +27,56 @@ export default function ListAppointments({appointments,navigation, handleLoadMor
 }
 
 function Appointment({appointment,navigation}){
-    const {id,namePatient,name,dateAndTime,address, images,idTags} = appointment.item
+    const {id,namePatient,name,dateAndTime,address, images,idTags,idCreator} = appointment.item
     const imageAppointment = size(images)>0 && images[0]
     const [userUpdated, setUserUpdated] = useState(getCurrentUser())
+    const [userTags, setUserTags] = useState([])
+    const [appointmentTags, setAppointmentTags] = useState([])
+
+    const [idTagsArray, setIdTagsArray] = useState([])
+
+
+
+    const tagsData=[]
+
+    useFocusEffect(
+        useCallback(() => {
+            async function getData() {
+                const responseTags = await getAllTags(idCreator)
+                
+                setIdTagsArray(Object.values(idTags))
+    
+                if (responseTags.statusResponse) {
+                    const dataResult = responseTags.tags.map(doc => ({id: doc.id,tagColor:doc.tagColor, tagName: doc.tagName}))
+                    dataResult.sort((a,b) => a.tagName.localeCompare(b.tagName))
+                    setUserTags(dataResult)
+      
+                    idTagsArray.forEach(tag => {
+                        tagsData.push(...getDetailsTag(tag))
+                    })
+                    setAppointmentTags(tagsData)
+
+    
+                }
+            }
+            getData()
+        }, [appointmentTags])
+    )
+
+
+
+
+
+    const getDetailsTag =(idTag) =>{
+
+        const tags = userTags.filter(tag => tag.id ===idTag)
+        const tagDetail =  tags.map(tag =>  ({id: tag.id, color: tag.tagColor, name: tag.tagName}))
+        return tagDetail
+
+    }
+
 
     const goAppointment =()=>{
-
         navigation.navigate("appointment",{appointment})
     }
 
@@ -45,7 +90,7 @@ function Appointment({appointment,navigation}){
                             resizeMode="cover"
                             PlaceholderContent={<ActivityIndicator color="#fff"/>}
                             source={
-                                namePatient.substr(0, 4) === "Yo (" 
+                                namePatient.substr(0, 4) === "Yo ("
                                 ? {uri: userUpdated.photoURL}
                                 : require("../../assets/avatar-default.jpg")
                             }
@@ -56,7 +101,7 @@ function Appointment({appointment,navigation}){
                 <View style={styles.viewInformation}>
                      <Text style={styles.appointmentTitle}>
                         {
-                            namePatient.substr(0, 4) === "Yo (" 
+                            namePatient.substr(0, 4) === "Yo ("
                             ? "Yo ("+userUpdated.displayName+")"
                             : namePatient
                         }
@@ -74,45 +119,44 @@ function Appointment({appointment,navigation}){
 
 
                 <View style={styles.viewTagsContainer}>
-                    <View style={styles.viewTags}>
 
-                        <Badge 
-                            value={
-                                <View style={styles.viewTagsElements}>
-                                    <Icon 
-                                        type="font-awesome"
-                                        name="star"
-                                        size={17}
-                                        iconStyle={styles.iconStyleTags}
-                                    />
-                                    <Text style={styles.textStyleTags}>Etiqueta 1</Text>
-                                </View>
-                            }
-                            badgeStyle={[styles.badge,{
-                                backgroundColor: "#22af1b",
-                            }]}
+                    {
+                        
+                        appointmentTags.map((tag)=>( 
+
+                            // console.log(tag)
+                            <View style={styles.viewTags}
+                                key={tag.id}
+                            >
+                                <Badge
+                                   
+                                    value={ 
+                                        <View style={styles.viewTagsElements}>
+                                            <Icon
+                                                type="font-awesome"
+                                                name="tags"
+                                                size={17}
+                                                iconStyle={styles.iconStyleTags}
+                                            />
+                                            <Text style={styles.textStyleTags}>
+                                                {
+                                                     size(tag.name) > 10
+                                                     ? `${tag.name.substr(0, 10)}...`
+                                                     : tag.name
+                                                    
+                                                }
+                                            </Text>
+                                        </View>
+                                    }
+                                    badgeStyle={[styles.badge,{
+                                        backgroundColor: tag.color,
+                                    }]}
+
+                                />
+                            </View>
+                        ))
                             
-                        />
-                    </View>
-                    <View style={styles.viewTags}>
-                        <Badge 
-                            value={
-                                <View style={styles.viewTagsElements}>
-                                    <Icon 
-                                        type="font-awesome"
-                                        name="star"
-                                        size={17}
-                                        iconStyle={styles.iconStyleTags}
-                                    />
-                                    <Text style={styles.textStyleTags}>Etiqueta 2</Text>
-                                </View>
-                            }
-                            badgeStyle={[styles.badge,{
-                                backgroundColor: "#f4544c",
-                            }]}
-                            
-                        />
-                    </View>
+                    }
 
                 </View>
             </View>

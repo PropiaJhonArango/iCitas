@@ -3,13 +3,12 @@ import { StyleSheet, Text, View,ScrollView,TouchableOpacity,Alert } from 'react-
 import { Icon, Image, Input } from 'react-native-elements'
 import CountryPicker from 'react-native-country-picker-modal'
 import uuid from 'random-uuid-v4'
-
 import Toast from 'react-native-easy-toast'
+import { isEmpty } from 'lodash'
 
-import { formatDate, getCountryCode, loadImageFromGallery } from '../../utils/helpers'
+import {  getCountryCode, loadImageFromGallery } from '../../utils/helpers'
 import { deleteDocument, updateDocument, uploadImage } from '../../utils/actions'
 import Loading from '../../components/Loading'
-import { isEmpty, map } from 'lodash'
 
 export default function MemberDetails({navigation, route}) {
 
@@ -116,23 +115,6 @@ export default function MemberDetails({navigation, route}) {
 
         navigation.navigate("social")
 
-
-
-    }
-
-    const uploadImages =async(newImages)=>{
-
-        // const imagesUrl = []
-        // await Promise.all( 
-        //     map(newImages, async(image) =>{
-        //         const response = await uploadImage(image, "appointmentsImages",uuid()) 
-        //         if(response.statusResponse){
-        //             imagesUrl.push(response.url) 
-        //         }
-        //     })
-
-        // ) 
-        // return imagesUrl
     }
 
     const deleteAppointment = async()=>{

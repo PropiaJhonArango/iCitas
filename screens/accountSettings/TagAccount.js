@@ -1,10 +1,10 @@
 import { isEmpty } from 'lodash'
 import React, { useRef, useState } from 'react'
-import { TouchableOpacity } from 'react-native'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View,TouchableOpacity } from 'react-native'
 import { Icon, Input } from 'react-native-elements'
 import Toast from 'react-native-easy-toast'
 import { Alert } from 'react-native'
+import { isEmpty } from 'lodash'
 
 import Loading from '../../components/Loading'
 import { deleteDocument, updateDocument } from '../../utils/actions'
