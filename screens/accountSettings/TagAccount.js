@@ -1,4 +1,3 @@
-import { isEmpty } from 'lodash'
 import React, { useRef, useState } from 'react'
 import { StyleSheet, Text, View,TouchableOpacity } from 'react-native'
 import { Icon, Input } from 'react-native-elements'
