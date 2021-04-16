@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import { StyleSheet, Text, View } from 'react-native'
 import { size } from 'lodash'
 
-import { getAppointmentsExpired,getMoreAppointmentsExpired } from '../utils/actions'
+import { getAppointmentsExpired,getCurrentUser,getMoreAppointmentsExpired } from '../utils/actions'
 import ListAppointments from './appointments/ListAppointments'
 import Loading from '../components/Loading'
 
@@ -20,7 +20,7 @@ export default function HistoryAppointments({navigation}) {
         useCallback(() => {
             async function getData() {
                 setLoading(true)
-                const response = await getAppointmentsExpired(12)
+                const response = await getAppointmentsExpired(limitAppointments,getCurrentUser().uid)
                 if (response.statusResponse) {
                     setStartAppointment(response.startAppointment)
                     setAppointments(response.appointments)
@@ -39,7 +39,7 @@ export default function HistoryAppointments({navigation}) {
             return
         }
 
-        const response = await getMoreAppointmentsExpired(limitAppointments, startAppointment)
+        const response = await getMoreAppointmentsExpired(limitAppointments,getCurrentUser().uid, startAppointment)
         if(response.statusResponse){
             setStartAppointment(response.startAppointment)
             setAppointments([...appointments, ...response.appointments])

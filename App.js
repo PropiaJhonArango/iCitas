@@ -19,6 +19,8 @@ export default function App() {
     user ? setLogged(true)  : setLogged(false)
   }, [logged])
 
+  
+
 
   return (
     <NavigationContainer>

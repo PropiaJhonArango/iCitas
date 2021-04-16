@@ -181,12 +181,13 @@ export const getCollectionWithId =  async(collection,id) =>{
     return result
 }
 
-export const getAppointments = async(limitAppointments) => {
+export const getAppointments = async(limitAppointments,idCurrentUser) => {
     const result = { statusResponse : true, error: null, appointments: [], startAppointment: null}
     try {
         const response = await db
                 .collection("Appointments")
                 .orderBy("dateAndTime", "asc")
+                .where("idCreator", "==", idCurrentUser)
                 .where("dateAndTime", ">=", new Date())
                 .limit(limitAppointments).get()
         if(response.docs.length > 0){
@@ -201,16 +202,16 @@ export const getAppointments = async(limitAppointments) => {
         result.statusResponse = false
         result.error = error
     }
-
     return result 
 }
 
-export const getMoreAppointments = async(limitAppointments, startAppointment) => {
+export const getMoreAppointments = async(limitAppointments,idCurrentUser, startAppointment) => {
     const result = { statusResponse : true, error: null, appointments: [], startAppointment: null}
     try {
         const response = await db
             .collection("Appointments")
             .orderBy("dateAndTime", "asc")
+            .where("idCreator", "==", idCurrentUser)
             .where("dateAndTime", ">=", new Date())
             .startAfter(startAppointment.data().dateAndTime)
             .limit(limitAppointments)
@@ -229,17 +230,17 @@ export const getMoreAppointments = async(limitAppointments, startAppointment) =>
         result.statusResponse = false
         result.error = error
     }
-
     return result 
 }
 
-export const getAppointmentsExpired = async(limitAppointments) => {
+export const getAppointmentsExpired = async(limitAppointments,idCurrentUser) => {
     const result = { statusResponse : true, error: null, appointments: [],startAppointment: null}
     try {
 
         const response = await db
         .collection("Appointments")
         .orderBy("dateAndTime", "desc")
+        .where("idCreator", "==", idCurrentUser)
         .where("dateAndTime", "<", new Date())
         .limit(limitAppointments)
         .get()
@@ -259,13 +260,14 @@ export const getAppointmentsExpired = async(limitAppointments) => {
     return result 
 }
 
-export const getMoreAppointmentsExpired = async(limitAppointments, startAppointment) => {
+export const getMoreAppointmentsExpired = async(limitAppointments,idCurrentUser, startAppointment) => {
     const result = { statusResponse : true, error: null, appointments: [], startAppointment: null}
     try {
 
         const response = await db
         .collection("Appointments")
         .orderBy("dateAndTime", "desc")
+        .where("idCreator", "==", idCurrentUser)
         .where("dateAndTime", "<", new Date())
         .startAfter(startAppointment.data().dateAndTime)
         .limit(limitAppointments)

@@ -6,7 +6,7 @@ import { size } from 'lodash'
 
 
 
-import { getAppointments, getMoreAppointments } from '../../utils/actions'
+import { getAppointments, getCurrentUser, getMoreAppointments } from '../../utils/actions'
 import ListAppointments from './ListAppointments'
 import Loading from '../../components/Loading'
 
@@ -24,7 +24,7 @@ export default function Appointments({navigation}) {
         useCallback(() => {
             async function getData() {
                 setLoading(true)
-                const response = await getAppointments(limitAppointments)
+                const response = await getAppointments(limitAppointments,getCurrentUser().uid)
                 if (response.statusResponse) {
                     setStartAppointment(response.startAppointment)
                     setAppointments(response.appointments)
@@ -43,7 +43,7 @@ export default function Appointments({navigation}) {
             return
         }
 
-        const response = await getMoreAppointments(limitAppointments, startAppointment)
+        const response = await getMoreAppointments(limitAppointments,getCurrentUser().uid, startAppointment)
         if(response.statusResponse){
             setStartAppointment(response.startAppointment)
             setAppointments([...appointments, ...response.appointments])
