@@ -1,26 +1,30 @@
 import React, { useCallback, useState } from 'react'
-import { useFocusEffect } from '@react-navigation/native'
 import { StyleSheet, Text, View } from 'react-native'
+import { Icon } from 'react-native-elements'
+import { useFocusEffect } from '@react-navigation/native'
 import { size } from 'lodash'
 
-import { getAppointmentsExpired,getCurrentUser,getMoreAppointmentsExpired } from '../utils/actions'
-import ListAppointments from './appointments/ListAppointments'
-import Loading from '../components/Loading'
 
 
-export default function HistoryAppointments({navigation}) {
+import { getAppointments, getCurrentUser, getMoreAppointments } from '../../utils/actions'
+import ListAppointments from './ListAppointments'
+import Loading from '../../components/Loading'
+
+export default function Appointments({navigation}) {
     const [startAppointment, setStartAppointment] = useState(null)
     const [appointments, setAppointments] = useState([])
     const [loading, setLoading] = useState(false)
 
+  
 
     const limitAppointments = 12
+
 
     useFocusEffect(
         useCallback(() => {
             async function getData() {
                 setLoading(true)
-                const response = await getAppointmentsExpired(limitAppointments,getCurrentUser().uid)
+                const response = await getAppointments(limitAppointments,getCurrentUser().uid)
                 if (response.statusResponse) {
                     setStartAppointment(response.startAppointment)
                     setAppointments(response.appointments)
@@ -29,22 +33,23 @@ export default function HistoryAppointments({navigation}) {
                 setLoading(false)
             }
             getData()
-            
         }, [])
-        
     )
+
+    
 
     const handleLoadMore = async() => {
         if(!startAppointment) {
             return
         }
 
-        const response = await getMoreAppointmentsExpired(limitAppointments,getCurrentUser().uid, startAppointment)
+        const response = await getMoreAppointments(limitAppointments,getCurrentUser().uid, startAppointment)
         if(response.statusResponse){
             setStartAppointment(response.startAppointment)
             setAppointments([...appointments, ...response.appointments])
         }
     }
+
 
     
     return (
@@ -52,7 +57,7 @@ export default function HistoryAppointments({navigation}) {
             <View style={styles.viewHeaderAppointments} >
                 <View>
 
-                <Text style={styles.titleHeader}>Citas Antiguas</Text>
+                <Text style={styles.titleHeader}>Citas Activas</Text>
                 </View>
             </View>
             {
@@ -66,39 +71,29 @@ export default function HistoryAppointments({navigation}) {
                 ): 
                 (
                     <View style={styles.notFoundView}>
-                        <Text style={styles.notFoundText}>No existen citas vencidas</Text>
+                        <Text style={styles.notFoundText}>No existen citas</Text>
+                        <Text style={styles.notFoundText}>¡Pulsa el boton para añadir una nueva cita!</Text>
                     </View>
                 )
             }
+            <Icon
+                type="font-awesome"
+                name="plus"
+                color="#f4544c"
+                reverse={true}
+                containerStyle={styles.btnContainer}
+                size={30}
+                onPress={()=> navigation.navigate("add-appointment")}
+            />
             <Loading isVisible={loading} text="Cargando Citas..."/>
            
         </View>
     )
 }
-
-
 const styles = StyleSheet.create({
     viewAppointments:{
         flex:1,
         marginBottom: 60
-    },
-    btnContainer:{
-        position: "absolute",
-        bottom:-30,
-        right:15,
-        shadowColor: "black",
-        shadowOffset: { width: 2, height: 2},
-        shadowOpacity: 0.5,
-
-    },
-    notFoundView : {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    notFoundText : {
-        fontSize: 18,
-        fontWeight: "bold"
     },
     viewHeaderAppointments:{
         height: 60,
@@ -114,6 +109,23 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize:20,
         
-    }
+    },
+    btnContainer:{
+        position: "absolute",
+        bottom:-30,
+        right:15,
+        shadowColor: "black",
+        shadowOffset: { width: 2, height: 2},
+        shadowOpacity: 0.5,
+    },
+    notFoundView : {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    notFoundText : {
+        fontSize: 18,
+        fontWeight: "bold"
+    },
 
 })

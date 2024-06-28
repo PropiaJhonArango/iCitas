@@ -9,5 +9,5 @@ import 'firebase/firestore'
     messagingSenderId: "1051790192767",
     appId: "1:1051790192767:web:5d70485b54730b0c98cf4a"
   }
-
+ 
   export const firebaseApp = firebase.initializeApp(firebaseConfig);

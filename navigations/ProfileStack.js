@@ -2,31 +2,24 @@ import React from 'react'
 import { createStackNavigator } from '@react-navigation/stack'
 
 import Profile from '../screens/profile/Profile'
-import Login from '../components/profile/Login'
 
 const Stack = createStackNavigator()
 
-export default function ProfileStack({userLogged}) {
+export default function ProfileStack({setLogged}) {
+
     return (
        <Stack.Navigator>
-           <Stack.Screen
-                name="profile"
-                // component={Profile}
-                children ={ () => <Profile userLogged={userLogged} />}
-                options={{
 
-                            title: (  userLogged ?  "Perfil" : "iCitas"),
-                            headerTitleAlign:"center"
-                        }}
-           />
-           <Stack.Screen
-                name="login"
-                children ={ () => <Login/>}
+
+            <Stack.Screen 
+                name="profile"
                 options={{
-                            title: "Iniciar Sesión",
-                            headerTitleAlign:"center"
-                        }}
-           />
+                    headerShown:false
+                 }}
+            >
+                    {props => <Profile {...props} setLogged={setLogged} />}
+            </Stack.Screen>
+            
        </Stack.Navigator>
     )
 }

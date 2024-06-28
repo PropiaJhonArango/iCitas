@@ -1,0 +1,7 @@
+AIzaSyBeQdmW980pxYQLHnloTm8mOknFTXUKkGE
+
+Accessing credentials for jhonarangotoro in project iCitas
+Google Certificate Fingerprint:     E1:23:B9:2E:EE:2C:13:5A:A5:D6:03:A7:D0:AA:31:C6:A7:BC:26:AA
+Google Certificate Hash (SHA-1):    E123B92EEE2C135AA5D603A7D0AA31C6A7BC26AA
+Google Certificate Hash (SHA-256):  9025629C1445FF16203011AE59E50B911DC70945034050534E159273C076AF18
+Facebook Key Hash:                  4SO5Lu4sE1ql1gOn0Koxxqe8Jqo=

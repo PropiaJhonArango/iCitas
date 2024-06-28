@@ -1,5 +1,4 @@
-import React,{ useCallback, useEffect, useState} from 'react'
-import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
+import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { Icon } from 'react-native-elements'
 
@@ -9,24 +8,11 @@ import HistoryAppointmentsStack from './HistoryAppointmentsStack'
 import SocialStack from './SocialStack'
 import AppointmentsStack from './AppointmentsStack'
 import ProfileStack from './ProfileStack'
-import { getCurrentUser } from '../utils/actions'
-
 
 
 const Tab = createBottomTabNavigator()
 
-export default function Navigation() {
-
-    const [userLogged, setUserLogged] = useState(false)
-    const user =getCurrentUser()
-
-     useEffect(() => {
-        user ? setUserLogged(true) : setUserLogged(false) /*MODIFICAR */
-     }, [])
-
-   console.log(userLogged)
-
-
+export default function Navigation({setLogged}) {
 
     const screenOptions =(route, color,focused)=>{
         let iconName
@@ -65,23 +51,16 @@ export default function Navigation() {
     }
 
     return (
-        <NavigationContainer>
+        
             
             <Tab.Navigator
-                 initialRouteName ={ userLogged ? "appointments" :  "profile"}
+                 initialRouteName ="appointments" 
                  
                  tabBarOptions={{
                      
                      inactiveTintColor:"#047ca4",
                      activeTintColor: "#f4544c",
-                     style: {
-                        backgroundColor:'transparent',
-                        borderTopWidth: 0,
-                        position: 'absolute',
-                        elevation: 0  
-                      }
-                      
-                                    
+             
                  }}
                 screenOptions ={({route}) => ({
 
@@ -114,20 +93,18 @@ export default function Navigation() {
                 <Tab.Screen
                     name="social"
                     component ={SocialStack}
-                    options={{title: "Social"}}
+                    options={{title: "Social"}} 
                 />
-                
-                <Tab.Screen
+ 
+                <Tab.Screen 
                     name="profile"
-                    children ={ () => <ProfileStack userLogged={userLogged} />}
-                    // component ={ProfileStack}
-                    options={{
-                                title: "Perfil",
-                                 tabBarVisible: userLogged
-                            }}
-                />
-                 
+                    options={{title: "Perfil"}} 
+                >
+                    {props => <ProfileStack {...props} setLogged={setLogged} />}
+                    
+                </Tab.Screen>
+
             </Tab.Navigator>
-        </NavigationContainer>
+        
     )
 }
