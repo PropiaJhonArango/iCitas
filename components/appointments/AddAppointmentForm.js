@@ -82,7 +82,6 @@ export default function AddAppointmentForm({
           dataResultTags.sort((a, b) => a.name.localeCompare(b.name));
           setUserTags(dataResultTags);
         }
-
         setLoading(false);
       }
       getData();

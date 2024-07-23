@@ -29,9 +29,10 @@ export default function HistoryAppointments({ navigation }) {
         if (response.statusResponse) {
           setStartAppointment(response.startAppointment);
           setAppointments(response.appointments);
+          setLoading(false);
+        } else {
+          setLoading(false);
         }
-
-        setLoading(false);
       }
       getData();
     }, [])

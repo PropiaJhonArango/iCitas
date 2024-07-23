@@ -168,6 +168,10 @@ function PersonalInfo({ user, setUser, setReloadUser, toasRef }) {
         setLoading(true);
         const result = await getCollectionWithId("Users", user.uid);
 
+        if (!result.statusResponse) {
+          setLoading(false);
+        }
+
         setUser({
           ...user,
           numberIdentify: result.data.numberIdentify,
