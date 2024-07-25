@@ -450,7 +450,7 @@ export default function Appointment({ navigation, route }) {
             />
           }
         />
-        {/* Imagenes */}
+        {/* Imagenes Cita*/}
         <View style={styles.viewBody}>
           <Text style={styles.textImage}>Imagenes</Text>
           <ScrollView horizontal style={styles.viewImage}>
