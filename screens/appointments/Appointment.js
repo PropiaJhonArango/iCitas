@@ -1,3 +1,4 @@
+// Importaciones Ajenas
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   TouchableOpacity,
@@ -8,7 +9,6 @@ import {
   View,
   Alert,
 } from "react-native";
-
 import { Avatar, Button, Icon, Input } from "react-native-elements";
 import moment from "moment";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -23,6 +23,7 @@ import ImageViewer from "react-native-image-zoom-viewer";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 
+// Importaciones Propias
 import Loading from "../../components/Loading";
 import {
   getAllSocialGroup,
@@ -316,20 +317,6 @@ export default function Appointment({ navigation, route }) {
     setImageViewerVisible(true);
   };
 
-  const downloadImage = async () => {
-    //  console.log("URL:" + imageUrl, "Indice: " + index);
-    // console.log(imagesSelected[indexCurrentImagen]);
-    let imageUrl = imagesSelected[indexCurrentImagen];
-    try {
-      const uri = FileSystem.documentDirectory + "image.jpg";
-      const response = await FileSystem.downloadAsync(imageUrl, uri);
-      Alert.alert("Descarga completa", `Archivo guardado en: ${response.uri}`);
-    } catch (error) {
-      Alert.alert("Error", "No se pudo descargar la imagen.");
-      console.error(error);
-    }
-  };
-
   const saveImageToGallery = async () => {
     try {
       let imageUrl = imagesSelected[indexCurrentImagen];
@@ -360,7 +347,6 @@ export default function Appointment({ navigation, route }) {
   };
 
   const onPageChange = (index) => {
-    console.log("El indice en OnPage es:" + index);
     setIndexCurrentImagen(index);
   };
 
@@ -369,14 +355,7 @@ export default function Appointment({ navigation, route }) {
       <Loading isVisible={loading} text="Cargando..." />
       <Toast ref={toasRef} position="bottom" opacity={0.9} />
 
-      <View
-        style={[
-          styles.viewBody,
-          {
-            marginTop: 15,
-          },
-        ]}
-      >
+      <View style={[styles.viewBody, { marginTop: 15 }]}>
         {/* Input Name */}
         <Input
           placeholder={"Nombre o descripcion de la cita...."}
@@ -552,7 +531,7 @@ export default function Appointment({ navigation, route }) {
               onPress={saveImageToGallery}
               style={styles.headerButton}
             >
-              <Icon name="download" size={30} color="#fff" />
+              <Icon name="download" size={33} color="#fff" />
             </TouchableOpacity>
 
             {/* Botón de cerrar a la derecha */}
@@ -560,20 +539,18 @@ export default function Appointment({ navigation, route }) {
               onPress={() => setImageViewerVisible(false)}
               style={styles.headerButton}
             >
-              <Icon name="close" size={30} color="#fff" />
+              <Icon name="close" size={33} color="#fff" />
             </TouchableOpacity>
           </View>
-          <ImageViewer
-            imageUrls={imagesSelected.map((url) => ({
-              url,
-            }))}
-            index={imagesSelected.indexOf(selectedImage)}
-            //onPress={onPageChange}
 
+          <ImageViewer
+            imageUrls={imagesSelected.map((url) => ({ url }))}
+            index={imagesSelected.indexOf(selectedImage)}
             onChange={onPageChange}
           />
         </Modal>
 
+        {/* Mapa */}
         <MapAppointment
           visibleMap={visibleMap}
           setVisibleMap={setVisibleMap}
@@ -581,6 +558,7 @@ export default function Appointment({ navigation, route }) {
           toasRef={toasRef}
           initialLocation={initialData.location}
         />
+        {/* Botonera Pie Pagina */}
         <View
           style={[
             styles.viewBody,
