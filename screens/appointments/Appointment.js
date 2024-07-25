@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+
 import { Avatar, Button, Icon, Input } from "react-native-elements";
 import moment from "moment";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -16,6 +17,8 @@ import { filter, isDate, isEmpty, map, size } from "lodash";
 import Toast from "react-native-easy-toast";
 import MapView from "react-native-maps";
 import uuid from "random-uuid-v4";
+import Modal from "react-native-modal";
+import ImageViewer from "react-native-image-zoom-viewer";
 
 import Loading from "../../components/Loading";
 import {
@@ -31,7 +34,7 @@ import {
   loadImageFromGalleryWithoutEditing,
 } from "../../utils/helpers";
 import { Alert } from "react-native";
-import Modal from "../../components/Modal";
+import ModalMap from "../../components/Modal";
 
 LogBox.ignoreAllLogs();
 
@@ -91,6 +94,9 @@ export default function Appointment({ navigation, route }) {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [visibleMap, setVisibleMap] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -169,6 +175,7 @@ export default function Appointment({ navigation, route }) {
     if (!response.status) {
       return;
     }
+    console.log(imagesSelected);
     setImagesSelected([...imagesSelected, response.image]);
   };
 
@@ -299,6 +306,11 @@ export default function Appointment({ navigation, route }) {
       })
     );
     return imagesUrl;
+  };
+
+  const onSelectImage = (image) => {
+    setSelectedImage(image);
+    setImageViewerVisible(true);
   };
 
   return (
@@ -435,6 +447,7 @@ export default function Appointment({ navigation, route }) {
           styleDropdownMenuSubsection={styles.dropdownMenuSubsectionMultiSelect}
         />
 
+        {/* Input Notas */}
         <Input
           placeholder="Notas..."
           multiline
@@ -470,11 +483,31 @@ export default function Appointment({ navigation, route }) {
                 key={index}
                 style={styles.miniatureStyle}
                 source={{ uri: imageRestaurant }}
-                onPress={() => removeImage(imageRestaurant)}
+                onPress={() => onSelectImage(imageRestaurant)}
+                onLongPress={() => removeImage(imageRestaurant)}
               />
             ))}
           </ScrollView>
         </View>
+
+        <Modal
+          isVisible={imageViewerVisible}
+          onBackdropPress={() => setImageViewerVisible(false)}
+          onRequestClose={() => setImageViewerVisible(false)}
+        >
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setImageViewerVisible(false)}>
+              <Icon name="close" size={30} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <ImageViewer
+            imageUrls={
+              imagesSelected.map((url) => ({
+                url,
+              })) /*[{ url: selectedImage }]*/
+            }
+          />
+        </Modal>
 
         <MapAppointment
           visibleMap={visibleMap}
@@ -540,7 +573,7 @@ function MapAppointment({
   };
 
   return (
-    <Modal isVisible={visibleMap} setVisible={setVisibleMap}>
+    <ModalMap isVisible={visibleMap} setVisible={setVisibleMap}>
       <View>
         {newRegionAppointment && (
           <MapView
@@ -573,7 +606,7 @@ function MapAppointment({
           />
         </View>
       </View>
-    </Modal>
+    </ModalMap>
   );
 }
 
@@ -683,5 +716,10 @@ const styles = StyleSheet.create({
     height: 100,
     width: "100%",
     marginTop: 15,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    padding: 10,
   },
 });
