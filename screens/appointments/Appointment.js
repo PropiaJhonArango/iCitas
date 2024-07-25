@@ -496,16 +496,27 @@ export default function Appointment({ navigation, route }) {
           onRequestClose={() => setImageViewerVisible(false)}
         >
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setImageViewerVisible(false)}>
+            {/* Botón de descargar a la izquierda */}
+            <TouchableOpacity
+              //onPress={handleDownloadImage}
+              style={styles.headerButton}
+            >
+              <Icon name="download" size={30} color="#fff" />
+            </TouchableOpacity>
+
+            {/* Botón de cerrar a la derecha */}
+            <TouchableOpacity
+              onPress={() => setImageViewerVisible(false)}
+              style={styles.headerButton}
+            >
               <Icon name="close" size={30} color="#fff" />
             </TouchableOpacity>
           </View>
           <ImageViewer
-            imageUrls={
-              imagesSelected.map((url) => ({
-                url,
-              })) /*[{ url: selectedImage }]*/
-            }
+            imageUrls={imagesSelected.map((url) => ({
+              url,
+            }))}
+            index={imagesSelected.indexOf(selectedImage)}
           />
         </Modal>
 
@@ -719,7 +730,11 @@ const styles = StyleSheet.create({
   },
   modalHeader: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     padding: 10,
+  },
+  headerButton: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
