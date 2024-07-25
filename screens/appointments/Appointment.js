@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Alert,
 } from "react-native";
 
 import { Avatar, Button, Icon, Input } from "react-native-elements";
@@ -19,6 +20,8 @@ import MapView from "react-native-maps";
 import uuid from "random-uuid-v4";
 import Modal from "react-native-modal";
 import ImageViewer from "react-native-image-zoom-viewer";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
 
 import Loading from "../../components/Loading";
 import {
@@ -33,10 +36,9 @@ import {
   getCurrentLocation,
   loadImageFromGalleryWithoutEditing,
 } from "../../utils/helpers";
-import { Alert } from "react-native";
 import ModalMap from "../../components/Modal";
 
-LogBox.ignoreAllLogs();
+LogBox.ignoreAllLogs(true);
 
 export default function Appointment({ navigation, route }) {
   const toasRef = useRef();
@@ -97,6 +99,7 @@ export default function Appointment({ navigation, route }) {
 
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [indexCurrentImagen, setIndexCurrentImagen] = useState();
 
   useFocusEffect(
     useCallback(() => {
@@ -175,7 +178,7 @@ export default function Appointment({ navigation, route }) {
     if (!response.status) {
       return;
     }
-    console.log(imagesSelected);
+
     setImagesSelected([...imagesSelected, response.image]);
   };
 
@@ -311,6 +314,54 @@ export default function Appointment({ navigation, route }) {
   const onSelectImage = (image) => {
     setSelectedImage(image);
     setImageViewerVisible(true);
+  };
+
+  const downloadImage = async () => {
+    //  console.log("URL:" + imageUrl, "Indice: " + index);
+    // console.log(imagesSelected[indexCurrentImagen]);
+    let imageUrl = imagesSelected[indexCurrentImagen];
+    try {
+      const uri = FileSystem.documentDirectory + "image.jpg";
+      const response = await FileSystem.downloadAsync(imageUrl, uri);
+      Alert.alert("Descarga completa", `Archivo guardado en: ${response.uri}`);
+    } catch (error) {
+      Alert.alert("Error", "No se pudo descargar la imagen.");
+      console.error(error);
+    }
+  };
+
+  const saveImageToGallery = async () => {
+    try {
+      let imageUrl = imagesSelected[indexCurrentImagen];
+      // Solicitar permisos para acceder a la galería
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permiso denegado",
+          "No se puede guardar la imagen sin permisos."
+        );
+        return;
+      }
+
+      // Definir la ubicación local para guardar la imagen
+      const localUri = FileSystem.documentDirectory + "downloadedImage.jpg";
+
+      // Descargar la imagen desde la URL
+      const { uri } = await FileSystem.downloadAsync(imageUrl, localUri);
+
+      // Guardar la imagen en la galería
+      await MediaLibrary.createAssetAsync(uri);
+
+      Alert.alert("Imagen guardada", "La imagen se ha guardado en la galería.");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo guardar la imagen.");
+      console.error("Error:", error);
+    }
+  };
+
+  const onPageChange = (index) => {
+    console.log("El indice en OnPage es:" + index);
+    setIndexCurrentImagen(index);
   };
 
   return (
@@ -492,13 +543,13 @@ export default function Appointment({ navigation, route }) {
 
         <Modal
           isVisible={imageViewerVisible}
-          onBackdropPress={() => setImageViewerVisible(false)}
+          onShow={() => onPageChange(imagesSelected.indexOf(selectedImage))}
           onRequestClose={() => setImageViewerVisible(false)}
         >
           <View style={styles.modalHeader}>
             {/* Botón de descargar a la izquierda */}
             <TouchableOpacity
-              //onPress={handleDownloadImage}
+              onPress={saveImageToGallery}
               style={styles.headerButton}
             >
               <Icon name="download" size={30} color="#fff" />
@@ -517,6 +568,9 @@ export default function Appointment({ navigation, route }) {
               url,
             }))}
             index={imagesSelected.indexOf(selectedImage)}
+            //onPress={onPageChange}
+
+            onChange={onPageChange}
           />
         </Modal>
 
