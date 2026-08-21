@@ -1,104 +1,89 @@
-import React from 'react'
-import { StyleSheet, Text, View,FlatList,TouchableOpacity,ActivityIndicator} from 'react-native'
-import { Icon, Image } from 'react-native-elements'
+import React from "react";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Icon } from "react-native-elements";
 
+import { COLORS } from "../../components/appointments/appointmentFormUi";
 
-export default function ListTags({tags,navigation, handleLoadMore}) {
-
-    return (
-        <View>
-            <FlatList 
-                data={tags}
-                keyExtractor={(item,index) => index.toString()}
-                onEndReachedThreshold={0.5}
-                onEndReached={handleLoadMore}
-                renderItem={(tag) => (
-                    <Tag tag={tag} navigation={navigation} />
-                )}
-            />
-        </View>
-    )
+export default function ListTags({ tags, navigation }) {
+  return (
+    <FlatList
+      data={tags}
+      keyExtractor={(item, index) => item.id || String(index)}
+      contentContainerStyle={styles.list}
+      showsVerticalScrollIndicator={false}
+      renderItem={(tag) => <TagCard tag={tag} navigation={navigation} />}
+    />
+  );
 }
 
-function Tag({tag,navigation}){
-    const {id,tagName,tagColor} = tag.item
+function TagCard({ tag, navigation }) {
+  const { tagName, tagColor } = tag.item;
 
-    const goTag =()=>{
-
-        navigation.navigate("tag", {tag})
-    }
-
-    return(
-        <TouchableOpacity
-            onPress={goTag}
-        >
-            <View style={styles.viewTags}>
-                <View style={styles.viewTagsIcon}>
-                    <Icon
-                        type="font-awesome"
-                        name="tags"
-                        color={tagColor}
-                        size={70}
-                    />
-                       
-                </View>
-                <View style={styles.viewInformation}>
-                    <Text >
-                        Etiqueta: <Text style={styles.tagTitle}>{tagName}</Text>
-                    </Text>
-                    
-                    <View style={styles.ViewColor}>
-                        <Text style={styles.textColor}>  Color: </Text>
-                            <TouchableOpacity 
-                                key={id}
-                                style={[styles.colorSelect,
-                                    {backgroundColor: tagColor}
-                                ]}            
-                            />
-                        </View>
-                </View>
-
-            </View>
-        </TouchableOpacity>
-    )
+  return (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate("tag", { tag })}
+      activeOpacity={0.75}
+    >
+      <View
+        style={[styles.dot, { backgroundColor: tagColor || COLORS.header }]}
+      />
+      <View style={styles.info}>
+        <Text style={styles.label}>ETIQUETA</Text>
+        <Text style={styles.name} numberOfLines={1}>
+          {tagName}
+        </Text>
+      </View>
+      <Icon
+        type="font-awesome"
+        name="chevron-right"
+        size={14}
+        color={COLORS.chevron}
+      />
+    </TouchableOpacity>
+  );
 }
-
-
 
 const styles = StyleSheet.create({
-    viewTags: {
-        flexDirection: "row",
-        margin: 10,
-        marginLeft: 30,
-        alignContent:"center",
-        marginTop:20
-    },
-    viewTagsIcon: {
-        marginRight: 10
-    },
-    imageSocialStyle: {
-        width: 90,
-        height: 90,
-        borderRadius:50,
-
-    },
-    tagTitle: {
-        fontWeight: "bold"
-    },
-    viewInformation:{
-        justifyContent:"center",
-        alignItems:"center",
-    },
-    ViewColor:{
-        alignContent:"center",
-        flexDirection: "row"
-    },
-    colorSelect:{
-        width: 20,
-        height: 20,
-        borderRadius:4,
-        marginHorizontal:2,
-        marginLeft:5
-
-    },
-})
+  list: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 88,
+  },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  dot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  info: {
+    flex: 1,
+    minWidth: 0,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    color: COLORS.label,
+  },
+  name: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLORS.value,
+    marginTop: 1,
+  },
+});

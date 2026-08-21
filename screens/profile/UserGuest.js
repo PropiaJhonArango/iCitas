@@ -10,6 +10,7 @@ export default function UserGuest({navigation}) {
         <View style={styles.container}>
             <StatusBar 
                 barStyle="light-content"
+                backgroundColor="#047ca4"
             />
             
             <View style={styles.header}>

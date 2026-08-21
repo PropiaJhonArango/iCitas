@@ -824,6 +824,7 @@ import {
   setDoc,
   deleteDoc,
   getDoc,
+  getCountFromServer,
 } from "firebase/firestore";
 
 import { LogBox } from "react-native";
@@ -841,6 +842,8 @@ import {
   reauthenticateWithCredential,
   updateEmail,
   updatePassword,
+  GoogleAuthProvider,
+  signInWithCredential,
 } from "firebase/auth";
 
 LogBox.ignoreAllLogs();
@@ -887,8 +890,42 @@ export const closeSession = () => {
   return signOut(auth);
 };
 
+// Recibe el idToken devuelto por GoogleSignin (código nativo, ver Login.js),
+// lo canjea por una credencial de Firebase e inicia sesión. Si es la primera
+// vez que entra la cuenta, crea su documento en la colección Users.
+export const loginWithGoogle = async (idToken) => {
+  const result = { statusResponse: true, error: null, user: null };
+  try {
+    const credential = GoogleAuthProvider.credential(idToken);
+    const userCredential = await signInWithCredential(auth, credential);
+    const user = userCredential.user;
+    result.user = user;
+
+    const userRef = doc(firestore, "Users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        name: user.displayName || "",
+        numberIdentify: "",
+        email: user.email || "",
+        phoneNumber: user.phoneNumber || "",
+        callingCode: "",
+        createdDate: new Date(),
+        isAppUser: true,
+        photoURL: user.photoURL || "",
+        uidUser: user.uid,
+      });
+    }
+  } catch (error) {
+    console.log("loginWithGoogle ERROR:", error?.code, error?.message);
+    result.statusResponse = false;
+    result.error = error?.code || "No se pudo iniciar sesión con Google.";
+  }
+  return result;
+};
+
 //YA
-export const uploadImage = async (image, path, name) => {
+export const uploadImage = async (image, path, name, contentType) => {
   const result = { statusResponse: false, error: null, url: null };
   try {
     if (!image) {
@@ -898,8 +935,9 @@ export const uploadImage = async (image, path, name) => {
     const blob = await response.blob();
 
     const storageRef = ref(storage, `${path}/${name}`);
+    const metadata = contentType ? { contentType } : undefined;
 
-    await uploadBytes(storageRef, blob);
+    await uploadBytes(storageRef, blob, metadata);
     const url = await getDownloadURL(storageRef);
 
     result.statusResponse = true;
@@ -971,10 +1009,11 @@ export const addDocumentWithId = async (collectionName, data) => {
 };
 //YA
 export const addDocumentWithoutId = async (collectionName, data) => {
-  const result = { statusResponse: true, error: null };
+  const result = { statusResponse: true, error: null, id: null };
   try {
     const colRef = collection(firestore, collectionName);
-    await addDoc(colRef, data);
+    const docRef = await addDoc(colRef, data);
+    result.id = docRef.id;
   } catch (error) {
     result.statusResponse = false;
     result.error = error;
@@ -1027,13 +1066,15 @@ export const getAppointments = async (limitAppointments, idCurrentUser) => {
 
   try {
     const appointmentsRef = collection(firestore, "Appointments");
-    const q = query(
-      appointmentsRef,
+    const constraints = [
       where("idCreator", "==", idCurrentUser),
       where("dateAndTime", ">=", new Date()),
       orderBy("dateAndTime", "asc"),
-      limit(limitAppointments)
-    );
+    ];
+    if (limitAppointments) {
+      constraints.push(limit(limitAppointments));
+    }
+    const q = query(appointmentsRef, ...constraints);
 
     const response = await getDocs(q);
 
@@ -1102,13 +1143,15 @@ export const getAppointmentsExpired = async (
   };
   try {
     const appointmentsRef = collection(firestore, "Appointments");
-    const q = query(
-      appointmentsRef,
+    const constraints = [
       where("idCreator", "==", idCurrentUser),
       where("dateAndTime", "<", new Date()),
       orderBy("dateAndTime", "asc"),
-      limit(limitAppointments)
-    );
+    ];
+    if (limitAppointments) {
+      constraints.push(limit(limitAppointments));
+    }
+    const q = query(appointmentsRef, ...constraints);
 
     const response = await getDocs(q);
 
@@ -1120,6 +1163,39 @@ export const getAppointmentsExpired = async (
         result.appointments.push(appointment);
       });
     }
+  } catch (error) {
+    result.statusResponse = false;
+    result.error = error;
+  }
+  return result;
+};
+
+export const getAppointmentsCounts = async (idCurrentUser) => {
+  const result = {
+    statusResponse: true,
+    error: null,
+    pending: 0,
+    expired: 0,
+  };
+  try {
+    const appointmentsRef = collection(firestore, "Appointments");
+    const now = new Date();
+    const pendingQuery = query(
+      appointmentsRef,
+      where("idCreator", "==", idCurrentUser),
+      where("dateAndTime", ">=", now)
+    );
+    const expiredQuery = query(
+      appointmentsRef,
+      where("idCreator", "==", idCurrentUser),
+      where("dateAndTime", "<", now)
+    );
+    const [pendingSnap, expiredSnap] = await Promise.all([
+      getCountFromServer(pendingQuery),
+      getCountFromServer(expiredQuery),
+    ]);
+    result.pending = pendingSnap.data().count;
+    result.expired = expiredSnap.data().count;
   } catch (error) {
     result.statusResponse = false;
     result.error = error;

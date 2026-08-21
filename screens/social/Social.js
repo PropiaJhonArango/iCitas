@@ -5,76 +5,49 @@ import { Icon } from "react-native-elements";
 import { size } from "lodash";
 
 import {
+  getAllSocialGroup,
   getCurrentUser,
-  getSocialGroup,
-  getMoreSocialGroup,
 } from "../../utils/actions";
 import Loading from "../../components/Loading";
 import ListSocialGroup from "./ListSocialGroup";
+import {
+  COLORS,
+  ScreenHeader,
+} from "../../components/appointments/appointmentFormUi";
 
 export default function Social({ navigation }) {
   const [loading, setLoading] = useState(false);
-  const [starSocialGroup, setStarSocialGroup] = useState(null);
   const [socialGroup, setSocialGroup] = useState([]);
-
-  const limitSocialGroup = 12;
 
   useFocusEffect(
     useCallback(() => {
       async function getData() {
         setLoading(true);
-        const response = await getSocialGroup(
-          limitSocialGroup,
-          getCurrentUser().uid
-        );
-
+        const response = await getAllSocialGroup(getCurrentUser().uid);
         if (response.statusResponse) {
-          setStarSocialGroup(response.startSocialGroup);
-          setSocialGroup(response.socialGroup);
+          const sorted = [...response.socialGroup].sort((a, b) =>
+            (a.nameMember || "").localeCompare(b.nameMember || "")
+          );
+          setSocialGroup(sorted);
         }
-
         setLoading(false);
       }
       getData();
     }, [])
   );
 
-  const handleLoadMore = async () => {
-    if (!starSocialGroup) {
-      return;
-    }
-
-    const response = await getMoreSocialGroup(
-      limitSocialGroup,
-      getCurrentUser().uid,
-      starSocialGroup
-    );
-    if (response.statusResponse) {
-      setStarSocialGroup(response.startSocialGroup);
-      setSocialGroup([...socialGroup, ...response.socialGroup]);
-    }
-  };
-
   return (
-    <View style={styles.viewSocial}>
-      <View style={styles.viewHeaderSocial}>
-        <View>
-          <Text style={styles.titleHeader}>Grupo Social</Text>
-        </View>
-      </View>
+    <View style={styles.screen}>
+      <ScreenHeader title="Grupo Social" />
       {size(socialGroup) > 0 ? (
-        <ListSocialGroup
-          socialGroup={socialGroup}
-          navigation={navigation}
-          handleLoadMore={handleLoadMore}
-        />
+        <ListSocialGroup socialGroup={socialGroup} navigation={navigation} />
       ) : (
         <View style={styles.notFoundView}>
           <Text style={styles.notFoundText}>
-            No tienes integrantes en tu circulo social
+            No tienes integrantes en tu círculo social
           </Text>
-          <Text style={styles.notFoundText}>
-            ¡Pulsa el boton para añadir un nuevo integrante!
+          <Text style={styles.notFoundHint}>
+            Pulsa el botón para añadir un nuevo integrante
           </Text>
         </View>
       )}
@@ -82,10 +55,10 @@ export default function Social({ navigation }) {
       <Icon
         type="font-awesome"
         name="plus"
-        color="#f4544c"
+        color={COLORS.red}
         reverse={true}
         containerStyle={styles.btnContainer}
-        size={30}
+        size={24}
         onPress={() => navigation.navigate("add-social")}
       />
     </View>
@@ -93,39 +66,36 @@ export default function Social({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  viewSocial: {
+  screen: {
     flex: 1,
-    marginBottom: 60,
-  },
-  viewHeaderSocial: {
-    height: 60,
-    width: "100%",
-    backgroundColor: "#047ca4",
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  titleHeader: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 20,
+    backgroundColor: COLORS.bg,
   },
   btnContainer: {
     position: "absolute",
-    bottom: -30,
-    right: 15,
-    shadowColor: "black",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.5,
+    bottom: 16,
+    right: 16,
+    shadowColor: COLORS.red,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
   },
   notFoundView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 32,
   },
   notFoundText: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.value,
+    textAlign: "center",
+  },
+  notFoundHint: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.label,
+    textAlign: "center",
   },
 });

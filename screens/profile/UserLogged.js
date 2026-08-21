@@ -9,9 +9,8 @@ import {
 } from "react-native";
 import { Icon, Image } from "react-native-elements";
 import { useFocusEffect } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import { map } from "lodash";
-import OptionesMenu from "react-native-option-menu";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   getCurrentUser,
@@ -20,11 +19,13 @@ import {
   closeSession,
   updateDocument,
   getCollectionWithId,
+  getAppointmentsCounts,
 } from "../../utils/actions";
 import { loadImageFromGallery } from "../../utils/helpers";
 import Loading from "../../components/Loading";
 import Modal from "../../components/Modal";
 import DisplayDataForm from "../../components/profile/DisplayDataForm";
+import { COLORS } from "../../components/appointments/appointmentFormUi";
 
 export default function UserLogged({ setLogged }) {
   const [user, setUser] = useState();
@@ -37,42 +38,54 @@ export default function UserLogged({ setLogged }) {
     setReloadUser(false);
   }, [reloadUser]);
 
+  if (!user) {
+    return <Loading isVisible={true} text="Cargando..." />;
+  }
+
   return (
-    <ScrollView>
-      {user && (
-        <ScrollView>
-          <Header
-            user={user}
-            setLoading={setLoading}
-            setLoadingText={setLoadingText}
-            setLogged={setLogged}
+    <View style={styles.screen}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}
+      >
+        <Header
+          user={user}
+          setLoading={setLoading}
+          setLoadingText={setLoadingText}
+        />
+        <AppointmentsStats user={user} />
+        <PersonalInfo
+          user={user}
+          setUser={setUser}
+          setReloadUser={setReloadUser}
+        />
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          onPress={() => {
+            closeSession();
+            setLogged(false);
+          }}
+        >
+          <Icon
+            type="font-awesome"
+            name="sign-out"
+            size={16}
+            color={COLORS.red}
           />
-          <AppointmentsStats user={user} />
-
-          <PersonalInfo
-            user={user}
-            setUser={setUser}
-            setReloadUser={setReloadUser}
-          />
-
-          <Loading isVisible={loading} text={loadingText} />
-        </ScrollView>
-      )}
-    </ScrollView>
+          <Text style={styles.logoutText}>Cerrar sesión</Text>
+        </TouchableOpacity>
+        <Loading isVisible={loading} text={loadingText} />
+      </ScrollView>
+    </View>
   );
 }
 
-function Header({ user, setLoading, setLoadingText, setLogged }) {
-  const CloseSessionUser = () => {
-    closeSession();
-    setLogged(false);
-  };
-
+function Header({ user, setLoading, setLoadingText }) {
   const [photoUrl, setPhotoUrl] = useState(user.photoURL);
 
   const updateProfilePhoto = async () => {
     const resultImageSelected = await loadImageFromGallery([1, 1]);
-
     if (!resultImageSelected.status) {
       return;
     }
@@ -108,54 +121,40 @@ function Header({ user, setLoading, setLoadingText, setLogged }) {
   };
 
   return (
-    <LinearGradient colors={["#047ca4", "#047ca4"]} start={[0, 0]} end={[1, 1]}>
-      <View style={styles.containerHeader}>
-        <View>
-          <View style={styles.rowBeetween}>
-            {/* <OptionesMenu
-              customButton={
-                <Icon
-                  type="font-awesome"
-                  name="bars"
-                  iconStyle={styles.iconPoints}
-                />
-              }
-              options={["Cerrar Sesión", "Cancelar"]}
-              actions={[CloseSessionUser]}
-            /> */}
+    <View style={styles.headerWrap}>
+      <SafeAreaView edges={["top"]}>
+        <Text style={styles.headerTitle}>Perfil</Text>
+        <TouchableOpacity
+          style={styles.photoWrap}
+          onPress={updateProfilePhoto}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={
+              photoUrl
+                ? { uri: photoUrl }
+                : require("../../assets/avatar-default.jpg")
+            }
+            style={styles.profilePhoto}
+          />
+          <View style={styles.cameraBtn}>
+            <Icon
+              type="font-awesome"
+              name="camera"
+              size={14}
+              color={COLORS.header}
+            />
           </View>
-          <View style={styles.imageContainer}>
-            <View>
-              <View style={styles.check}>
-                <Icon
-                  type="font-awesome"
-                  name="camera"
-                  onPress={updateProfilePhoto}
-                />
-              </View>
-              <Image
-                source={
-                  photoUrl
-                    ? { uri: photoUrl }
-                    : require("../../assets/avatar-default.jpg")
-                }
-                style={styles.profilePhoto}
-                onPress={updateProfilePhoto}
-              />
-            </View>
-          </View>
-          <View style={styles.viewTitle}>
-            <Text style={styles.titleName}>
-              {user.displayName ? user.displayName : "Anonimo"}
-            </Text>
-          </View>
-        </View>
-      </View>
-    </LinearGradient>
+        </TouchableOpacity>
+        <Text style={styles.titleName}>
+          {user.displayName ? user.displayName : "Anónimo"}
+        </Text>
+      </SafeAreaView>
+    </View>
   );
 }
 
-function PersonalInfo({ user, setUser, setReloadUser, toasRef }) {
+function PersonalInfo({ user, setUser, setReloadUser }) {
   const [showModalInfo, setShowModalInfo] = useState(false);
   const [renderComponentInfo, setRenderComponentInfo] = useState(null);
   const [infoUser, setInfoUser] = useState("");
@@ -170,6 +169,7 @@ function PersonalInfo({ user, setUser, setReloadUser, toasRef }) {
 
         if (!result.statusResponse) {
           setLoading(false);
+          return;
         }
 
         setUser({
@@ -193,115 +193,89 @@ function PersonalInfo({ user, setUser, setReloadUser, toasRef }) {
     return [
       {
         iconName: "user-circle",
-        textData: user.displayName ? user.displayName : "Nombre Completo",
+        iconColor: COLORS.blue,
+        label: "Nombre",
+        textData: user.displayName ? user.displayName : "Nombre completo",
         onPress: () => selectedField("displayName"),
       },
       {
         iconName: "id-badge",
-
-        /*If the user has not defined a name, "Identification number" is displayed by default*/
+        iconColor: COLORS.blue,
+        label: "Identificación",
         textData: user.numberIdentify
           ? user.numberIdentify
           : infoUser.numberIdentify
           ? infoUser.numberIdentify
-          : "Numero de identificación",
-
+          : "Número de identificación",
         onPress: () => selectedField("numberIdentify"),
       },
       {
         iconName: "envelope",
-        textData: user.email ? user.email : "Correo electronico",
+        iconColor: COLORS.teal,
+        label: "Correo",
+        textData: user.email ? user.email : "Correo electrónico",
         onPress: () => selectedField("email"),
       },
       {
         iconName: "phone",
-        textData_Calling: user.callingCode
-          ? user.callingCode
-          : infoUser.callingCode,
-        textData_Phone: user.phoneNumberUser
-          ? user.phoneNumberUser
-          : infoUser.phoneNumberUser,
+        iconColor: COLORS.teal,
+        label: "Teléfono",
+        textData:
+          user.callingCode || infoUser.callingCode
+            ? "+" +
+              (user.callingCode || infoUser.callingCode) +
+              " " +
+              (user.phoneNumberUser || infoUser.phoneNumberUser || "")
+            : "Número telefónico",
         onPress: () => selectedField("phoneNumber"),
       },
       {
         iconName: "lock",
-        textData: "Contraseña",
+        iconColor: COLORS.mutedIcon,
+        label: "Seguridad",
+        textData: "Cambiar contraseña",
         onPress: () => selectedField("password"),
       },
     ];
   };
 
   const selectedField = (key) => {
+    const common = {
+      typeField: key,
+      setReloadUser,
+      setShowModalInfo,
+      uidUser: user.uid,
+      setReloadInfoExternal,
+    };
+
     switch (key) {
       case "displayName":
         setRenderComponentInfo(
-          <DisplayDataForm
-            typeField={key}
-            valueField={user.displayName}
-            setReloadUser={setReloadUser}
-            setShowModalInfo={setShowModalInfo}
-            toasRef={toasRef}
-            uidUser={user.uid}
-            setReloadInfoExternal={setReloadInfoExternal}
-          />
+          <DisplayDataForm {...common} valueField={user.displayName} />
         );
         break;
       case "numberIdentify":
         setRenderComponentInfo(
-          <DisplayDataForm
-            typeField={key}
-            valueField={user.numberIdentify}
-            setReloadUser={setReloadUser}
-            setShowModalInfo={setShowModalInfo}
-            toasRef={toasRef}
-            uidUser={user.uid}
-            setReloadInfoExternal={setReloadInfoExternal}
-          />
+          <DisplayDataForm {...common} valueField={user.numberIdentify} />
         );
         break;
       case "email":
         setRenderComponentInfo(
-          <DisplayDataForm
-            typeField={key}
-            valueField={user.email}
-            setReloadUser={setReloadUser}
-            setShowModalInfo={setShowModalInfo}
-            toasRef={toasRef}
-            uidUser={user.uid}
-            setReloadInfoExternal={setReloadInfoExternal}
-          />
+          <DisplayDataForm {...common} valueField={user.email} />
         );
         break;
       case "phoneNumber":
         setRenderComponentInfo(
           <DisplayDataForm
-            typeField={key}
-            /*Because the phone is divided into two parts (Country code and phone number) 
-                        I send it concatenated by a script and then make the split*/
-
+            {...common}
             valueField={
               user.callingCode && user.callingCode + "_" + user.phoneNumberUser
             }
-            setReloadUser={setReloadUser}
-            setShowModalInfo={setShowModalInfo}
-            toasRef={toasRef}
-            uidUser={user.uid}
-            setReloadInfoExternal={setReloadInfoExternal}
           />
         );
         break;
       case "password":
-        setRenderComponentInfo(
-          <DisplayDataForm
-            typeField={key}
-            valueField={""}
-            setReloadUser={setReloadUser}
-            setShowModalInfo={setShowModalInfo}
-            toasRef={toasRef}
-            uidUser={user.uid}
-            setReloadInfoExternal={setReloadInfoExternal}
-          />
-        );
+        setRenderComponentInfo(<DisplayDataForm {...common} valueField={""} />);
         break;
     }
     setShowModalInfo(true);
@@ -310,180 +284,222 @@ function PersonalInfo({ user, setUser, setReloadUser, toasRef }) {
   const menuData = dataOptionsUser();
 
   return (
-    <ScrollView>
+    <View style={styles.group}>
       {map(menuData, (menu, index) => (
-        <TouchableOpacity key={index} onPress={menu.onPress}>
-          <View style={styles.viewPersonalInfoContainer}>
-            <View style={styles.viewPersonalInfo}>
+        <View key={index}>
+          {index > 0 && <View style={styles.divider} />}
+          <TouchableOpacity onPress={menu.onPress} activeOpacity={0.7}>
+            <View style={styles.infoRow}>
               <Icon
                 type="font-awesome"
                 name={menu.iconName}
-                iconStyle={styles.iconPersonalInfo}
-                size={30}
+                size={16}
+                color={menu.iconColor}
+              />
+              <View style={styles.infoBody}>
+                <Text style={styles.infoLabel}>{menu.label}</Text>
+                <Text style={styles.infoValue} numberOfLines={1}>
+                  {menu.textData}
+                </Text>
+              </View>
+              <Icon
+                type="font-awesome"
+                name="chevron-right"
+                size={14}
+                color={COLORS.chevron}
               />
             </View>
-            {}
-            <Text>
-              {menu.iconName === "phone"
-                ? menu.textData_Calling
-                  ? "+" + menu.textData_Calling + " " + menu.textData_Phone
-                  : "Numero Telefonico"
-                : menu.textData}
-            </Text>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
       ))}
       <Modal isVisible={showModalInfo} setVisible={setShowModalInfo}>
         {renderComponentInfo}
       </Modal>
       <Loading isVisible={loading} text="Cargando..." />
-    </ScrollView>
+    </View>
   );
 }
 
 function AppointmentsStats({ user }) {
+  const [pending, setPending] = useState(0);
+  const [expired, setExpired] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function loadCounts() {
+        if (!user?.uid) {
+          return;
+        }
+        const response = await getAppointmentsCounts(user.uid);
+        if (response.statusResponse) {
+          setPending(response.pending);
+          setExpired(response.expired);
+        }
+      }
+      loadCounts();
+    }, [user?.uid])
+  );
+
   return (
-    <View style={styles.viewPersonalStats}>
-      <View style={[styles.viewStatAppointment, styles.divider]}>
-        <Text style={styles.statNumber}>2</Text>
-        <Text style={styles.stat}>Citas Pendientes</Text>
+    <View style={styles.statsCard}>
+      <View style={[styles.statBlock, styles.statDivider]}>
+        <Text style={styles.statNumber}>{pending}</Text>
+        <Text style={styles.stat}>Citas pendientes</Text>
       </View>
-      <View style={styles.viewStatAppointment}>
-        <Text style={styles.statNumber}>12</Text>
-        <Text style={styles.stat}>Citas Antiguas</Text>
+      <View style={styles.statBlock}>
+        <Text style={styles.statNumber}>{expired}</Text>
+        <Text style={styles.stat}>Citas antiguas</Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  containerHeader: {
-    marginHorizontal: 32,
-    paddingVertical: 20,
+  screen: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
   },
-  container: {
+  body: {
+    paddingBottom: 28,
+  },
+  headerWrap: {
+    backgroundColor: COLORS.header,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    paddingBottom: 22,
     alignItems: "center",
-    backgroundColor: "#047ca4",
-    paddingVertical: 30,
+    shadowColor: COLORS.header,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  infoUser: {
-    marginLeft: 20,
-    justifyContent: "center",
-    alignItems: "center",
+  headerTitle: {
+    color: COLORS.white,
+    fontWeight: "800",
+    fontSize: 18,
+    letterSpacing: 0.2,
+    textAlign: "center",
+    paddingTop: 4,
+    marginBottom: 14,
   },
-
-  displayName: {
-    fontWeight: "bold",
-    fontSize: 20,
-    marginTop: 5,
-    color: "white",
+  photoWrap: {
+    alignSelf: "center",
   },
-  rowBeetween: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  profilePhoto: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.35)",
   },
-  imageContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-    shadowColor: "#222",
-    shadowOffset: {
-      height: 3,
-      width: 1,
-    },
-    shadowOpacity: 0.5,
-  },
-  check: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 100,
-    width: 40,
-    height: 40,
-    shadowColor: "#222",
-    shadowOffset: {
-      height: 3,
-      width: 1,
-    },
-    shadowOpacity: 0.3,
+  cameraBtn: {
     position: "absolute",
-    zIndex: 1,
-    right: -16,
-    bottom: 16,
-  },
-  iconPoints: {
-    color: "#FFFFFF",
-  },
-  viewTitle: {
+    right: -2,
+    bottom: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.white,
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 12,
   },
   titleName: {
-    color: "#FFFFFF",
-    fontSize: 30,
-  },
-  viewPersonalInfoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-    backgroundColor: "#e3e6e6",
-    paddingHorizontal: 16,
-
-    width: "90%",
-    alignSelf: "center",
-    borderRadius: 20,
-  },
-  viewPersonalInfo: {
-    width: 50,
-    height: 50,
-  },
-  imageUserName: {
-    flex: 1,
-    width: 20,
-    resizeMode: "center",
-  },
-  iconPersonalInfo: {
+    color: COLORS.white,
+    fontSize: 20,
+    fontWeight: "800",
+    textAlign: "center",
     marginTop: 10,
-    color: "#c1c1c1",
   },
-  viewPersonalStats: {
-    paddingVertical: 10,
-    paddingHorizontal: 32,
-    marginBottom: 5,
-    backgroundColor: "#877f7e",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 16,
+  statsCard: {
+    marginTop: -16,
+    marginHorizontal: 14,
+    backgroundColor: COLORS.white,
     borderRadius: 16,
-    marginTop: -25,
+    flexDirection: "row",
+    paddingVertical: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  viewStatAppointment: {
-    alignItems: "center",
-    justifyContent: "center",
+  statBlock: {
     flex: 1,
+    alignItems: "center",
+  },
+  statDivider: {
+    borderRightWidth: 1,
+    borderRightColor: COLORS.divider,
   },
   statNumber: {
     fontSize: 20,
-    fontWeight: "600",
-    fontWeight: "bold",
-    color: "#FFFFFF",
+    fontWeight: "800",
+    color: COLORS.header,
   },
   stat: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
     textTransform: "uppercase",
-    color: "#FFFFFF",
-    marginTop: 6,
+    color: COLORS.label,
+    marginTop: 4,
+  },
+  group: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    marginHorizontal: 14,
+    marginTop: 12,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   divider: {
-    borderRightWidth: 1,
-    borderColor: "#FFFFFF",
+    height: 1,
+    backgroundColor: COLORS.divider,
+    marginLeft: 48,
   },
-  profilePhoto: {
-    width: 130,
-    height: 130,
-    borderRadius: 50,
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  infoBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  infoLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    color: COLORS.label,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.value,
+    marginTop: 1,
+  },
+  logoutBtn: {
+    marginTop: 16,
+    marginHorizontal: 14,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  logoutText: {
+    color: COLORS.red,
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

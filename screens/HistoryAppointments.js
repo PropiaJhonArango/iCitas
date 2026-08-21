@@ -2,70 +2,48 @@ import React, { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { StyleSheet, Text, View } from "react-native";
 import { size } from "lodash";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   getAppointmentsExpired,
   getCurrentUser,
-  getMoreAppointmentsExpired,
 } from "../utils/actions";
 import ListAppointments from "./appointments/ListAppointments";
 import Loading from "../components/Loading";
+import { COLORS } from "../components/appointments/appointmentFormUi";
 
 export default function HistoryAppointments({ navigation }) {
-  const [startAppointment, setStartAppointment] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const limitAppointments = 12;
 
   useFocusEffect(
     useCallback(() => {
       async function getData() {
         setLoading(true);
         const response = await getAppointmentsExpired(
-          limitAppointments,
+          null,
           getCurrentUser().uid
         );
         if (response.statusResponse) {
-          setStartAppointment(response.startAppointment);
           setAppointments(response.appointments);
-          setLoading(false);
-        } else {
-          setLoading(false);
         }
+        setLoading(false);
       }
       getData();
     }, [])
   );
 
-  const handleLoadMore = async () => {
-    if (!startAppointment) {
-      return;
-    }
-
-    const response = await getMoreAppointmentsExpired(
-      limitAppointments,
-      getCurrentUser().uid,
-      startAppointment
-    );
-    if (response.statusResponse) {
-      setStartAppointment(response.startAppointment);
-      setAppointments([...appointments, ...response.appointments]);
-    }
-  };
-
   return (
-    <View style={styles.viewAppointments}>
-      <View style={styles.viewHeaderAppointments}>
-        <View>
+    <View style={styles.screen}>
+      <View style={styles.headerWrap}>
+        <SafeAreaView edges={["top"]}>
           <Text style={styles.titleHeader}>Citas Antiguas</Text>
-        </View>
+        </SafeAreaView>
       </View>
       {size(appointments) > 0 ? (
         <ListAppointments
           appointments={appointments}
           navigation={navigation}
-          handleLoadMore={handleLoadMore}
         />
       ) : (
         <View style={styles.notFoundView}>
@@ -78,39 +56,40 @@ export default function HistoryAppointments({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  viewAppointments: {
+  screen: {
     flex: 1,
-    marginBottom: 60,
+    backgroundColor: COLORS.bg,
   },
-  btnContainer: {
-    position: "absolute",
-    bottom: -30,
-    right: 15,
-    shadowColor: "black",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.5,
+  headerWrap: {
+    backgroundColor: COLORS.header,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    paddingBottom: 16,
+    alignItems: "center",
+    shadowColor: COLORS.header,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  titleHeader: {
+    color: COLORS.white,
+    fontWeight: "800",
+    fontSize: 18,
+    letterSpacing: 0.2,
+    textAlign: "center",
+    paddingTop: 4,
   },
   notFoundView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 32,
   },
   notFoundText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  viewHeaderAppointments: {
-    height: 60,
-    width: "100%",
-    backgroundColor: "#047ca4",
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  titleHeader: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.value,
+    textAlign: "center",
   },
 });

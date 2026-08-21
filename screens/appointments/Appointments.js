@@ -3,33 +3,27 @@ import { StyleSheet, Text, View } from "react-native";
 import { Icon } from "react-native-elements";
 import { useFocusEffect } from "@react-navigation/native";
 import { size } from "lodash";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   getAppointments,
   getCurrentUser,
-  getMoreAppointments,
 } from "../../utils/actions";
 import ListAppointments from "./ListAppointments";
 import Loading from "../../components/Loading";
+import { COLORS } from "../../components/appointments/appointmentFormUi";
 
 export default function Appointments({ navigation }) {
-  const [startAppointment, setStartAppointment] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const limitAppointments = 12;
 
   useFocusEffect(
     useCallback(() => {
       async function getData() {
         setLoading(true);
-        const response = await getAppointments(
-          limitAppointments,
-          getCurrentUser().uid
-        );
+        const response = await getAppointments(null, getCurrentUser().uid);
 
         if (response.statusResponse) {
-          setStartAppointment(response.startAppointment);
           setAppointments(response.appointments);
         }
 
@@ -39,90 +33,91 @@ export default function Appointments({ navigation }) {
     }, [])
   );
 
-  const handleLoadMore = async () => {
-    if (!startAppointment) {
-      return;
-    }
-
-    const response = await getMoreAppointments(
-      limitAppointments,
-      getCurrentUser().uid,
-      startAppointment
-    );
-    if (response.statusResponse) {
-      setStartAppointment(response.startAppointment);
-      setAppointments([...appointments, ...response.appointments]);
-    }
-  };
-
   return (
-    <View style={styles.viewAppointments}>
-      <View style={styles.viewHeaderAppointments}>
-        <View>
+    <View style={styles.screen}>
+      <View style={styles.headerWrap}>
+        <SafeAreaView edges={["top"]}>
           <Text style={styles.titleHeader}>Citas Activas</Text>
-        </View>
+        </SafeAreaView>
       </View>
       {size(appointments) > 0 ? (
         <ListAppointments
           appointments={appointments}
           navigation={navigation}
-          handleLoadMore={handleLoadMore}
         />
       ) : (
         <View style={styles.notFoundView}>
           <Text style={styles.notFoundText}>No existen citas</Text>
-          <Text style={styles.notFoundText}>
-            ¡Pulsa el boton para añadir una nueva cita!
+          <Text style={styles.notFoundHint}>
+            Pulsa el botón para añadir una nueva cita
           </Text>
         </View>
       )}
       <Icon
         type="font-awesome"
         name="plus"
-        color="#f4544c"
+        color={COLORS.red}
         reverse={true}
         containerStyle={styles.btnContainer}
-        size={30}
+        size={24}
         onPress={() => navigation.navigate("add-appointment")}
       />
       <Loading isVisible={loading} text="Cargando Citas..." />
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  viewAppointments: {
+  screen: {
     flex: 1,
-    marginBottom: 60,
+    backgroundColor: COLORS.bg,
   },
-  viewHeaderAppointments: {
-    height: 60,
-    width: "100%",
-    backgroundColor: "#047ca4",
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    justifyContent: "center",
+  headerWrap: {
+    backgroundColor: COLORS.header,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    paddingBottom: 16,
     alignItems: "center",
+    shadowColor: COLORS.header,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
   },
   titleHeader: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 20,
+    color: COLORS.white,
+    fontWeight: "800",
+    fontSize: 18,
+    letterSpacing: 0.2,
+    textAlign: "center",
+    paddingTop: 4,
   },
   btnContainer: {
     position: "absolute",
-    bottom: -30,
-    right: 15,
-    shadowColor: "black",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.5,
+    bottom: 16,
+    right: 16,
+    shadowColor: COLORS.red,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
   },
   notFoundView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 32,
   },
   notFoundText: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.value,
+    textAlign: "center",
+  },
+  notFoundHint: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.label,
+    textAlign: "center",
   },
 });

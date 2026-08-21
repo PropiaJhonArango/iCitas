@@ -1,6 +1,9 @@
-import { Alert, ImageEditor } from "react-native";
+import { Alert, Platform } from "react-native";
 // import * as Permissions from "expo-permissions";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
+import * as IntentLauncher from "expo-intent-launcher";
+import * as FileSystem from "expo-file-system";
 import * as Location from "expo-location";
 import { reject, size } from "lodash";
 
@@ -1285,6 +1288,58 @@ export const getCountryCode = (countryCallingCode) => {
   return countryCode;
 };
 
+export const getCallingCodeFromCountryCode = (isoCode) => {
+  const match = countryList.find(
+    (country) =>
+      country.countryCode.toLowerCase() === String(isoCode || "").toLowerCase()
+  );
+  return match ? match.countryCallingCode : null;
+};
+
+export const parsePhoneForMember = (rawNumber, fallbackCallingCode = "57") => {
+  const fallback = String(fallbackCallingCode || "57").replace(/\D/g, "") || "57";
+  const compact = String(rawNumber || "").trim();
+  if (!compact) {
+    return { callingCode: fallback, phoneNumber: "" };
+  }
+
+  let digits = compact.replace(/[^\d+]/g, "");
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2);
+  }
+
+  const callingCodes = [...new Set(countryList.map((c) => c.countryCallingCode))]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  const stripTrunkZero = (value) => String(value || "").replace(/^0/, "");
+
+  if (digits.startsWith("+")) {
+    const rest = digits.slice(1);
+    const code = callingCodes.find((item) => rest.startsWith(item));
+    if (code) {
+      return {
+        callingCode: code,
+        phoneNumber: stripTrunkZero(rest.slice(code.length)),
+      };
+    }
+    return { callingCode: fallback, phoneNumber: stripTrunkZero(rest) };
+  }
+
+  const onlyDigits = digits.replace(/\D/g, "");
+  if (
+    onlyDigits.startsWith(fallback) &&
+    onlyDigits.length > fallback.length + 6
+  ) {
+    return {
+      callingCode: fallback,
+      phoneNumber: stripTrunkZero(onlyDigits.slice(fallback.length)),
+    };
+  }
+
+  return { callingCode: fallback, phoneNumber: stripTrunkZero(onlyDigits) };
+};
+
 // export const getCurrentLocation = async () => {
 //   const response = { status: false, location: null };
 //   const resultPermissions = await Permissions.askAsync(Permissions.LOCATION);
@@ -1338,5 +1393,200 @@ export const formatDate = (date) => {
     return;
   }
   const result = date.substr(0, 10).replace("-", "").replace("-", "");
+  return result;
+};
+
+export const ATTACHMENT_IMAGE = "image";
+export const ATTACHMENT_PDF = "pdf";
+
+export const isPdfAttachment = (uri = "") => {
+  if (!uri) {
+    return false;
+  }
+  try {
+    const path = String(uri).split("?")[0];
+    const decoded = decodeURIComponent(path).toLowerCase();
+    return decoded.endsWith(".pdf");
+  } catch (error) {
+    return String(uri).toLowerCase().includes(".pdf");
+  }
+};
+
+export const getAttachmentUri = (item) => {
+  if (!item) {
+    return "";
+  }
+  return typeof item === "string" ? item : item.uri || "";
+};
+
+export const getAttachmentType = (item) => {
+  if (!item) {
+    return ATTACHMENT_IMAGE;
+  }
+  if (typeof item === "object" && item.type) {
+    return item.type;
+  }
+  return isPdfAttachment(getAttachmentUri(item))
+    ? ATTACHMENT_PDF
+    : ATTACHMENT_IMAGE;
+};
+
+export const normalizeAttachments = (images) => {
+  if (!Array.isArray(images)) {
+    return [];
+  }
+  return images
+    .map((item) => {
+      const uri = getAttachmentUri(item);
+      if (!uri) {
+        return null;
+      }
+      const type = getAttachmentType(item);
+      return {
+        uri,
+        type,
+        name:
+          (typeof item === "object" && item.name) ||
+          (type === ATTACHMENT_PDF ? "documento.pdf" : "imagen"),
+      };
+    })
+    .filter(Boolean);
+};
+
+export const isRemoteAttachment = (uri = "") => {
+  return uri.startsWith("http://") || uri.startsWith("https://");
+};
+
+export const getAttachmentExtension = (item) => {
+  if (getAttachmentType(item) === ATTACHMENT_PDF) {
+    return "pdf";
+  }
+  const uri = getAttachmentUri(item).split("?")[0].toLowerCase();
+  if (uri.endsWith(".png")) return "png";
+  if (uri.endsWith(".webp")) return "webp";
+  if (uri.endsWith(".gif")) return "gif";
+  if (uri.endsWith(".heic")) return "heic";
+  return "jpg";
+};
+
+export const getAttachmentContentType = (item) => {
+  const ext = getAttachmentExtension(item);
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  if (ext === "gif") return "image/gif";
+  if (ext === "heic") return "image/heic";
+  return "image/jpeg";
+};
+
+const pickImageAttachment = async () => {
+  const response = { status: false, attachment: null };
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (status !== "granted") {
+    Alert.alert(
+      "Permiso denegado",
+      "Debes dar permiso para acceder a las imágenes del teléfono."
+    );
+    return response;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    allowsEditing: false,
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  });
+
+  if (result.canceled || result.cancelled) {
+    return response;
+  }
+
+  const asset = result.assets && result.assets[0];
+  if (!asset) {
+    return response;
+  }
+
+  response.status = true;
+  response.attachment = {
+    uri: asset.uri,
+    type: ATTACHMENT_IMAGE,
+    name: asset.fileName || "imagen.jpg",
+  };
+  return response;
+};
+
+const pickPdfAttachment = async () => {
+  const response = { status: false, attachment: null };
+  const result = await DocumentPicker.getDocumentAsync({
+    type: "application/pdf",
+    copyToCacheDirectory: true,
+    multiple: false,
+  });
+
+  if (result.canceled) {
+    return response;
+  }
+
+  const asset = result.assets && result.assets[0];
+  if (!asset) {
+    return response;
+  }
+
+  response.status = true;
+  response.attachment = {
+    uri: asset.uri,
+    type: ATTACHMENT_PDF,
+    name: asset.name || "documento.pdf",
+  };
+  return response;
+};
+
+export const loadAppointmentAttachment = () => {
+  return new Promise((resolve) => {
+    Alert.alert(
+      "Agregar archivo",
+      "Puedes adjuntar una imagen o un PDF (por ejemplo una orden médica).",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+          onPress: () => resolve({ status: false, attachment: null }),
+        },
+        {
+          text: "Imagen",
+          onPress: async () => resolve(await pickImageAttachment()),
+        },
+        {
+          text: "PDF",
+          onPress: async () => resolve(await pickPdfAttachment()),
+        },
+      ]
+    );
+  });
+};
+
+export const openPdfWithSystemApp = async (uri) => {
+  const result = { status: false, error: null, fileUri: uri };
+  try {
+    let fileUri = uri;
+    if (isRemoteAttachment(uri)) {
+      const dest = FileSystem.cacheDirectory + `cita-adjunto-${Date.now()}.pdf`;
+      const downloaded = await FileSystem.downloadAsync(uri, dest);
+      fileUri = downloaded.uri;
+    }
+
+    if (Platform.OS === "android") {
+      const contentUri = await FileSystem.getContentUriAsync(fileUri);
+      await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+        data: contentUri,
+        flags: 1,
+        type: "application/pdf",
+      });
+    }
+
+    result.status = true;
+    result.fileUri = fileUri;
+  } catch (error) {
+    result.error = error;
+  }
   return result;
 };

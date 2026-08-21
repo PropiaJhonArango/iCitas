@@ -150,7 +150,7 @@ export default function Navigation({ setLogged }) {
         type="font-awesome"
         name={iconName}
         size={focused ? 37 : 22}
-        color={focused ? "#f4544c" : "#047ca4"}
+        color={focused ? "#e8503c" : "#357288"}
       />
     );
   };
@@ -161,8 +161,16 @@ export default function Navigation({ setLogged }) {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color }) =>
           screenOptions(route, color, focused),
-        tabBarActiveTintColor: "#f4544c",
-        tabBarInactiveTintColor: "#047ca4",
+        tabBarActiveTintColor: "#e8503c",
+        tabBarInactiveTintColor: "#357288",
+        tabBarStyle: {
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#f0f0ed",
+        },
+        tabBarLabelStyle: {
+          fontWeight: "600",
+          fontSize: 10,
+        },
       })}
     >
       <Tab.Screen

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,8 +10,14 @@ import { Divider, Icon, Input, SocialIcon } from "react-native-elements";
 import { isEmpty } from "lodash";
 import * as Animatable from "react-native-animatable";
 import { useNavigation } from "@react-navigation/native";
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 
-import { loginWithEmailAndPassword } from "../../utils/actions";
+import { loginWithEmailAndPassword, loginWithGoogle } from "../../utils/actions";
+import { googleWebClientId } from "../../utils/firebase";
 import { validateEmail } from "../../utils/helpers";
 import Loading from "../Loading";
 
@@ -25,8 +31,50 @@ export default function Login({ setLogged }) {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  // Configura GoogleSignin una sola vez con el Web client ID de Firebase.
+  useEffect(() => {
+    GoogleSignin.configure({ webClientId: googleWebClientId });
+  }, []);
+
   const onChange = (e, type) => {
     setFormData({ ...formData, [type]: e.nativeEvent.text });
+  };
+
+  const onGoogleSignIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      // El usuario canceló el selector de cuentas.
+      if (!isSuccessResponse(response)) {
+        return;
+      }
+
+      const idToken = response.data?.idToken;
+      if (!idToken) {
+        setErrorEmail("No se obtuvo el token de Google. Intenta de nuevo.");
+        return;
+      }
+
+      setLoading(true);
+      const result = await loginWithGoogle(idToken);
+      setLoading(false);
+
+      if (!result.statusResponse) {
+        setErrorEmail(result.error);
+        return;
+      }
+
+      /*Se cambia el estado a logueado para entrar al TabNavigator */
+      setLogged(true);
+    } catch (error) {
+      setLoading(false);
+      console.log("GoogleSignin ERROR:", error?.code, error?.message);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      }
+      setErrorEmail("Google: " + (error?.code || error?.message || "error"));
+    }
   };
 
   const onSubmit = async () => {
@@ -144,12 +192,13 @@ export default function Login({ setLogged }) {
           </View>
 
           <View style={styles.socialIconView}>
-            <View style={styles.socialIcon}>
-              <SocialIcon type="facebook" />
-            </View>
-            <View style={styles.socialIcon}>
-              <SocialIcon type="google" />
-            </View>
+            <SocialIcon
+              title="Iniciar sesión con Google"
+              button
+              type="google"
+              onPress={onGoogleSignIn}
+              style={styles.googleButton}
+            />
           </View>
         </View>
       </Animatable.View>
@@ -251,10 +300,9 @@ const styles = StyleSheet.create({
   socialIconView: {
     marginTop: 10,
     justifyContent: "center",
-    flex: 1,
     flexDirection: "row",
   },
-  socialIcon: {
-    flexDirection: "column",
+  googleButton: {
+    width: "100%",
   },
 });
