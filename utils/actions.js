@@ -810,7 +810,9 @@
 //   return result;
 // };
 
-import { auth, firestore } from "./firebase";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+
+import { auth, firestore, googleWebClientId } from "./firebase";
 import {
   collection,
   query,
@@ -886,7 +888,22 @@ export const loginWithEmailAndPassword = async (email, password) => {
   return result;
 };
 
-export const closeSession = () => {
+// Android guarda la última cuenta de Google usada en esta app. Si no se
+// cierra esa sesión, el siguiente GoogleSignin.signIn() reutiliza esa cuenta
+// y no muestra el selector. Hay que llamarlo también al cerrar sesión de Firebase.
+export const closeGoogleSession = async () => {
+  try {
+    GoogleSignin.configure({ webClientId: googleWebClientId });
+    if (GoogleSignin.hasPreviousSignIn()) {
+      await GoogleSignin.signOut();
+    }
+  } catch (error) {
+    // Si el usuario no entró con Google, no hay sesión nativa que limpiar.
+  }
+};
+
+export const closeSession = async () => {
+  await closeGoogleSession();
   return signOut(auth);
 };
 

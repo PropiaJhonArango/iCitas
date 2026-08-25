@@ -4,17 +4,27 @@ import moment from "moment";
 import "moment/locale/es";
 
 import {
+  getAllSocialGroup,
+  getAllTags,
   getAppointments,
   getCollectionWithId,
   getCurrentUser,
   updateDocument,
 } from "./actions";
 import { ensureBackgroundDelivery } from "./reminderAlarms";
+import {
+  buildAppointmentWhatsAppMessage,
+  getPatientWhatsAppNumber,
+  openWhatsAppMessage,
+  tagNamesFromIds,
+} from "./whatsapp";
 
 moment.locale("es");
 
 const CHANNEL_ID = "citas";
 const NOTIFICATION_PREFIX = "cita-";
+const CATEGORY_ID = "cita-recordatorio";
+const ACTION_NOTIFY_PATIENT = "NOTIFY_PATIENT";
 
 export const DEFAULT_NOTIFICATION_SETTINGS = {
   enabled: false,
@@ -98,6 +108,25 @@ async function ensureAndroidChannel() {
     bypassDnd: false,
     showBadge: true,
   });
+}
+
+// Registra la categoría con el botón de acción "Notificar Paciente".
+// Es solo JS (no requiere módulo nativo nuevo).
+async function ensureNotificationCategory() {
+  if (Platform.OS === "web") {
+    return;
+  }
+  try {
+    await Notifications.setNotificationCategoryAsync(CATEGORY_ID, [
+      {
+        identifier: ACTION_NOTIFY_PATIENT,
+        buttonTitle: "Notificar Paciente",
+        options: { opensAppToForeground: true },
+      },
+    ]);
+  } catch (error) {
+    // Sin módulo nativo no debe tumbar el arranque.
+  }
 }
 
 export async function getNotificationPermission() {
@@ -188,24 +217,110 @@ export async function cancelAllAppointmentReminders() {
   }
 }
 
-function buildReminderContent(appointment, appointmentDate) {
+// --- Botón "Notificar Paciente" de la notificación ---
+
+let notificationActionSub = null;
+const handledActionResponses = new Set();
+
+async function handleNotificationResponse(response) {
+  if (!response || response.actionIdentifier !== ACTION_NOTIFY_PATIENT) {
+    return;
+  }
+  const request = response.notification?.request;
+  const key = `${request?.identifier || ""}:${response.actionIdentifier}`;
+  if (handledActionResponses.has(key)) {
+    return; // evita doble disparo (listener + arranque en frío)
+  }
+  handledActionResponses.add(key);
+
+  const data = request?.content?.data || {};
+  if (data.patientPhone && data.whatsappMessage) {
+    await openWhatsAppMessage(data.patientPhone, data.whatsappMessage);
+  }
+}
+
+// Registra el listener de la acción. Llamar una vez al iniciar la app.
+export function registerNotificationActionHandler() {
+  if (Platform.OS === "web") {
+    return () => {};
+  }
+  try {
+    ensureNotificationCategory();
+    // App abierta desde cero por la acción (estaba cerrada):
+    Notifications.getLastNotificationResponseAsync().then(
+      handleNotificationResponse
+    );
+    // App en ejecución o segundo plano:
+    if (notificationActionSub) {
+      notificationActionSub.remove();
+    }
+    notificationActionSub =
+      Notifications.addNotificationResponseReceivedListener(
+        handleNotificationResponse
+      );
+  } catch (error) {
+    // Sin módulo nativo no debe tumbar la app.
+  }
+  return () => {
+    notificationActionSub?.remove();
+    notificationActionSub = null;
+  };
+}
+
+function buildReminderContent(appointment, appointmentDate, socialGroup, userTags) {
   const name = (appointment.name || "sin nombre").trim();
   const patient = (appointment.namePatient || "sin paciente").trim();
   const when = moment(appointmentDate).format("dddd D [de] MMMM, h:mm a");
-  return {
+
+  // Si el paciente es un integrante del grupo social con teléfono, se adjunta el
+  // botón "Notificar Paciente" con el mensaje de WhatsApp ya preparado (mismo
+  // formato que al crear la cita).
+  const member = (socialGroup || []).find(
+    (m) => m.idMemberUser === appointment.idPatient
+  );
+  const patientPhone = member ? getPatientWhatsAppNumber(member) : null;
+  const whatsappMessage = patientPhone
+    ? buildAppointmentWhatsAppMessage({
+        patientName: appointment.namePatient,
+        appointmentName: appointment.name,
+        dateAndTime: appointmentDate,
+        address: appointment.address,
+        doctor: appointment.doctor,
+        tagNames: tagNamesFromIds(appointment.idTags, userTags),
+        notes: appointment.notes,
+        isUpdate: false,
+      })
+    : null;
+
+  const content = {
     title: "Cita próxima",
-    body: `Se acerca la cita ${name} del paciente ${patient}.\n${when}`,
+    body: `Cita ${name} de ${patient} a las ${when}`,
     sound: true,
     color: "#357288",
     channelId: CHANNEL_ID,
     priority: Notifications.AndroidNotificationPriority.MAX,
     data: {
       appointmentId: appointment.id || "",
+      patientPhone: patientPhone || "",
+      whatsappMessage: whatsappMessage || "",
     },
   };
+
+  // Solo muestra el botón si hay a quién notificar por WhatsApp.
+  if (patientPhone && whatsappMessage) {
+    content.categoryIdentifier = CATEGORY_ID;
+  }
+
+  return content;
 }
 
-async function scheduleOne(appointment, appointmentDate, triggerDate) {
+async function scheduleOne(
+  appointment,
+  appointmentDate,
+  triggerDate,
+  socialGroup,
+  userTags
+) {
   const now = Date.now();
   if (appointmentDate.getTime() <= now) {
     return false;
@@ -218,7 +333,12 @@ async function scheduleOne(appointment, appointmentDate, triggerDate) {
 
   await Notifications.scheduleNotificationAsync({
     identifier: `${NOTIFICATION_PREFIX}${appointment.id}`,
-    content: buildReminderContent(appointment, appointmentDate),
+    content: buildReminderContent(
+      appointment,
+      appointmentDate,
+      socialGroup,
+      userTags
+    ),
     trigger: {
       date: fireAt,
       channelId: CHANNEL_ID,
@@ -227,7 +347,7 @@ async function scheduleOne(appointment, appointmentDate, triggerDate) {
   return true;
 }
 
-async function scheduleReminders(settings, appointments) {
+async function scheduleReminders(settings, appointments, socialGroup, userTags) {
   await cancelAllAppointmentReminders();
   if (!settings.enabled) {
     return { scheduled: 0 };
@@ -246,7 +366,13 @@ async function scheduleReminders(settings, appointments) {
     }
     const triggerDate = new Date(appointmentDate.getTime() - advanceMs);
     try {
-      const ok = await scheduleOne(appointment, appointmentDate, triggerDate);
+      const ok = await scheduleOne(
+        appointment,
+        appointmentDate,
+        triggerDate,
+        socialGroup,
+        userTags
+      );
       if (ok) {
         scheduled += 1;
       }
@@ -289,6 +415,8 @@ export async function syncAppointmentReminders() {
       await ensureBackgroundDelivery({ prompt: false });
     }
 
+    await ensureNotificationCategory();
+
     const appointmentsResult = await getAppointments(null, user.uid);
     if (!appointmentsResult.statusResponse) {
       return {
@@ -298,9 +426,15 @@ export async function syncAppointmentReminders() {
       };
     }
 
+    // Grupo social y etiquetas para poder armar el WhatsApp del botón.
+    const socialResult = await getAllSocialGroup(user.uid);
+    const tagsResult = await getAllTags(user.uid);
+
     const { scheduled } = await scheduleReminders(
       settings,
-      appointmentsResult.appointments || []
+      appointmentsResult.appointments || [],
+      socialResult.socialGroup || [],
+      tagsResult.tags || []
     );
     console.log(
       `Recordatorios programados: ${scheduled} de ${

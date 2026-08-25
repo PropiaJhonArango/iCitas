@@ -62,8 +62,8 @@ export default function UserLogged({ setLogged }) {
         />
         <TouchableOpacity
           style={styles.logoutBtn}
-          onPress={() => {
-            closeSession();
+          onPress={async () => {
+            await closeSession();
             setLogged(false);
           }}
         >

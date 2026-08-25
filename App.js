@@ -10,6 +10,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { COLORS } from "./components/appointments/appointmentFormUi";
 import {
   cancelAllAppointmentReminders,
+  registerNotificationActionHandler,
   syncAppointmentReminders,
 } from "./utils/notifications";
 
@@ -30,6 +31,12 @@ export default function App() {
       }
     });
     return unsubscribe;
+  }, []);
+
+  // Listener del botón "Notificar Paciente" de la notificación.
+  useEffect(() => {
+    const unregister = registerNotificationActionHandler();
+    return unregister;
   }, []);
 
   useEffect(() => {

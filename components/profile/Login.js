@@ -16,7 +16,11 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 
-import { loginWithEmailAndPassword, loginWithGoogle } from "../../utils/actions";
+import {
+  closeGoogleSession,
+  loginWithEmailAndPassword,
+  loginWithGoogle,
+} from "../../utils/actions";
 import { googleWebClientId } from "../../utils/firebase";
 import { validateEmail } from "../../utils/helpers";
 import Loading from "../Loading";
@@ -43,6 +47,8 @@ export default function Login({ setLogged }) {
   const onGoogleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices();
+      // Sin esto Android reutiliza la última cuenta y no muestra el selector.
+      await closeGoogleSession();
       const response = await GoogleSignin.signIn();
 
       // El usuario canceló el selector de cuentas.

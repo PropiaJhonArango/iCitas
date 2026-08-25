@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Keyboard,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -83,6 +83,10 @@ export default function MapPickerModal({
   // Evita que el texto puesto por una selección dispare otra búsqueda (bucles).
   const skipSearchRef = useRef(false);
   const selectingRef = useRef(false);
+  // Distingue un tap de un scroll: si el dedo se mueve, no se selecciona.
+  const listScrollingRef = useRef(false);
+  const listTouchYRef = useRef(0);
+  const scrollEndTimerRef = useRef(null);
 
   const [region, setRegion] = useState(null);
   const [markerCoord, setMarkerCoord] = useState(null);
@@ -123,6 +127,10 @@ export default function MapPickerModal({
     })();
     return () => {
       active = false;
+      if (scrollEndTimerRef.current) {
+        clearTimeout(scrollEndTimerRef.current);
+      }
+      listScrollingRef.current = false;
     };
   }, [isVisible]);
 
@@ -297,20 +305,46 @@ export default function MapPickerModal({
     setVisible(false);
   };
 
+  const markListScrolling = () => {
+    if (scrollEndTimerRef.current) {
+      clearTimeout(scrollEndTimerRef.current);
+      scrollEndTimerRef.current = null;
+    }
+    listScrollingRef.current = true;
+  };
+
+  const clearListScrollingSoon = () => {
+    if (scrollEndTimerRef.current) {
+      clearTimeout(scrollEndTimerRef.current);
+    }
+    // En Android el onPress puede dispararse al soltar tras un scroll.
+    // Se deja el flag un instante para ignorar ese toque fantasma.
+    scrollEndTimerRef.current = setTimeout(() => {
+      listScrollingRef.current = false;
+      scrollEndTimerRef.current = null;
+    }, 80);
+  };
+
+  const onSelectIfTap = (item, pageY) => {
+    if (selectingRef.current || listScrollingRef.current) {
+      return;
+    }
+    if (
+      typeof pageY === "number" &&
+      Math.abs(pageY - listTouchYRef.current) > 10
+    ) {
+      return;
+    }
+    onSelectPrediction(item);
+  };
+
   return (
     <Modal
       visible={isVisible}
       animationType="slide"
       onRequestClose={() => setVisible(false)}
     >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="always"
-        keyboardDismissMode="none"
-        scrollEnabled={false}
-        nestedScrollEnabled
-      >
+      <View style={styles.container}>
         <View
           style={styles.mapWrap}
           pointerEvents={predictions.length > 0 ? "none" : "auto"}
@@ -378,22 +412,32 @@ export default function MapPickerModal({
           </View>
 
           {predictions.length > 0 && (
-            <ScrollView
+            <FlatList
               style={styles.list}
-              keyboardShouldPersistTaps="always"
+              data={predictions}
+              keyExtractor={(item) => item.place_id}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="none"
               nestedScrollEnabled
               removeClippedSubviews={false}
-              keyboardDismissMode="none"
-            >
-              {predictions.map((item) => (
+              showsVerticalScrollIndicator
+              onTouchStart={(e) => {
+                listTouchYRef.current = e.nativeEvent.pageY;
+              }}
+              onScrollBeginDrag={markListScrolling}
+              onScrollEndDrag={clearListScrollingSoon}
+              onMomentumScrollEnd={clearListScrollingSoon}
+              renderItem={({ item }) => (
                 <Pressable
-                  key={item.place_id}
                   style={({ pressed }) => [
                     styles.row,
                     pressed && styles.rowPressed,
                   ]}
-                  onPress={() => onSelectPrediction(item)}
-                  onPressIn={() => onSelectPrediction(item)}
+                  // Solo onPress: onPressIn dispara al apoyar el dedo y
+                  // convierte el scroll en una selección accidental.
+                  onPress={(e) =>
+                    onSelectIfTap(item, e.nativeEvent.pageY)
+                  }
                 >
                   <Icon
                     type="font-awesome"
@@ -405,8 +449,8 @@ export default function MapPickerModal({
                     {item.description}
                   </Text>
                 </Pressable>
-              ))}
-            </ScrollView>
+              )}
+            />
           )}
         </View>
 
@@ -430,7 +474,7 @@ export default function MapPickerModal({
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </Modal>
   );
 }
